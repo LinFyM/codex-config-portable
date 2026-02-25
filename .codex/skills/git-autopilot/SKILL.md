@@ -123,6 +123,31 @@ Notes:
 4. PR creation / merge / rebase / force push:
    - stop and ask for explicit user confirmation.
 
+## GitHub integration (optional, when requested)
+
+Use `gh` only when the user explicitly asks for GitHub-side automation (open PR, inspect CI, address PR comments). Otherwise, do not create PRs or query CI by default.
+
+### Preconditions
+
+- Verify authentication: `gh auth status -h github.com`
+- If unauthenticated, ask the user to run `gh auth login` before proceeding.
+
+### Open or inspect a PR (user-requested)
+
+- After pushing the branch:
+  - Check whether a PR already exists for the current branch:
+    - `gh pr view --json number,url,state,title 2>/dev/null`
+  - If none exists and the user requested a PR:
+    - Prefer `yeet` for the one-shot flow, or run:
+      - `GH_PROMPT_DISABLED=1 gh pr create --draft --fill`
+
+### CI status / failures (user-requested)
+
+- If the user asks to check CI:
+  - `gh pr checks` (quick status)
+  - If failing and you need logs/triage: use the `gh-fix-ci` skill.
+- If the user asks to address PR review comments: use the `gh-address-comments` skill.
+
 ## Artifact hygiene (end of task)
 
 - If the task produced iterative artifacts (figures/exports/reports/generated configs):

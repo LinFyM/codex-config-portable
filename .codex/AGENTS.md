@@ -116,8 +116,10 @@
 - When the user asks for a fully automated deliverable flow (review -> fix -> verify -> commit/push), prefer the `git-autopilot` skill.
 - Cloud/PR workflows:
   - Keeping the feature branch pushed is encouraged for resiliency and handoff.
+  - Use `yeet` when the user explicitly wants an end-to-end GitHub flow (commit/push + open a PR) via `gh`.
   - Use `gh-fix-ci` to diagnose failing GitHub checks, and `gh-address-comments` to address PR review comments (both are approval-gated by their own skills).
   - Opening PRs / merging remains an explicit user decision.
+- GitHub CLI note: for any GitHub automation (`gh-*` skills, branch cleanup, CI inspection), first verify `gh auth status -h github.com`; if unauthenticated, ask the user to run `gh auth login`.
 
 ## Git Worktrees (Parallel Work)
 - Use worktrees to avoid stash/switch churn and to enable true parallelism (e.g., long-running jobs, independent feature+fix tracks, keeping a clean baseline checkout).
