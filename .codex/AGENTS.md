@@ -124,6 +124,7 @@
 - Agent initiative:
   - If parallelization materially reduces risk or time, proactively create a worktree by default.
   - If the benefit is unclear or disk impact may be high, propose a worktree plan first and ask.
+- Prefer the `git-autopilot` skill for the detailed, end-to-end worktree workflow (create worktree -> review/fix loop -> verify -> commit/push).
 - Conventions:
   - Put extra worktrees under `WORKSPACE/.codex/tmp/worktrees/<slug>_<timestamp>/` (do not scatter under repo root).
   - Branch naming: `wt/<slug>-YYYYMMDD-HHMM` (push as a backup once local gates pass).
