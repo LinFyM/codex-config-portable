@@ -1,0 +1,4 @@
+interface:
+  display_name: "Memory Recall"
+  short_description: "Recall workspace memory to resume work quickly."
+  default_prompt: "Use $memory-recall to summarize this workspace and next steps."

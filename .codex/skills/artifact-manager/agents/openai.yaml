@@ -1,0 +1,4 @@
+interface:
+  display_name: "Artifact Manager"
+  short_description: "Manage iterative artifacts with latest+history tracking."
+  default_prompt: "Maintain a canonical latest artifact and an organized history under WORKSPACE/.codex/tmp/artifacts. Avoid generating many versioned files in the repo; instead replace latest and archive snapshots at milestones. Never delete without approval."

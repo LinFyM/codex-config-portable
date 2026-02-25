@@ -1,0 +1,37 @@
+# Portable template for Codex CLI.
+# Copy to ~/.codex/config.toml and adjust local fields.
+
+# Default model for interactive + exec sessions.
+model = "gpt-5.3-codex"
+
+# Model used by `/review` (defaults to the current session model if unset).
+review_model = "gpt-5.3-codex"
+
+# Use at least high for review-heavy workflows.
+model_reasoning_effort = "xhigh"
+personality = "friendly"
+
+[mcp_servers.linear]
+url = "https://mcp.linear.app/mcp"
+enabled = false
+
+[mcp_servers.openaiDeveloperDocs]
+url = "https://developers.openai.com/mcp"
+
+[mcp_servers.figma]
+url = "https://mcp.figma.com/mcp"
+
+[notice.model_migrations]
+"gpt-5.2" = "gpt-5.2-codex"
+
+[tui]
+status_line = ["model-with-reasoning", "current-dir", "git-branch", "context-window-size", "used-tokens", "total-input-tokens", "total-output-tokens"]
+
+# Example project trust entry (replace with your local absolute path).
+# [projects."/ABS/PATH/TO/YOUR/PROJECT"]
+# trust_level = "trusted"
+
+# Optional local proxy.
+# [proxy]
+# http_proxy = "http://127.0.0.1:7890"
+# https_proxy = "http://127.0.0.1:7890"

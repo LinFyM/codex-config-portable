@@ -1,0 +1,4 @@
+interface:
+  display_name: "Project Alignment"
+  short_description: "Clarify macro goals until unambiguous"
+  default_prompt: "Use $project-alignment to ask iterative clarification questions until macro goals, scope, and success criteria are unambiguous before implementation."

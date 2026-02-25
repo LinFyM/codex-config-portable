@@ -1,0 +1,4 @@
+interface:
+  display_name: "Memory Flush"
+  short_description: "Write a small workspace memory checkpoint."
+  default_prompt: "Use $memory-flush to checkpoint progress in this workspace."

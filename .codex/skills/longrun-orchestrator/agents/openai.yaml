@@ -1,0 +1,4 @@
+interface:
+  display_name: "Long-Run Orchestrator"
+  short_description: "Run/monitor long jobs with a watcher and resumable logs."
+  default_prompt: "Set up a lightweight orchestrator to run a long command, monitor it to completion, and optionally run follow-up steps. Store logs and status in WORKSPACE/.codex and provide a minimal interim update with a resume trigger."

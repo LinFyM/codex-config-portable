@@ -1,0 +1,4 @@
+interface:
+  display_name: "Draw.io"
+  short_description: "Edit and export .drawio diagrams."
+  default_prompt: "Use $draw-io to update a .drawio diagram and export a PNG preview."

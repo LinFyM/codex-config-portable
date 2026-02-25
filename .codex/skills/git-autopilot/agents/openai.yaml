@@ -1,0 +1,4 @@
+interface:
+  display_name: "Git Autopilot"
+  short_description: "Automate review-fix-verify-push"
+  default_prompt: "Use $git-autopilot to run a full review->fix->verify->commit/push loop with Option B guardrails."

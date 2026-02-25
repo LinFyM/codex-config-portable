@@ -1,0 +1,4 @@
+interface:
+  display_name: "Workspace Cleanup"
+  short_description: "Inventory artifacts and propose a safe cleanup plan."
+  default_prompt: "Scan the current workspace for untracked and temporary artifacts, classify them as keep/temporary/review, and propose a cleanup plan. Do not delete without explicit approval. Prefer moving temporary artifacts under WORKSPACE/.codex/tmp."
