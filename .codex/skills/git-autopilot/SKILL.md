@@ -27,6 +27,47 @@ description: >-
 3. If on a protected branch (`main`/`master`/release), create/switch to a feature branch before making edits.
    - Use a predictable name: `codex/<slug>-YYYYMMDD`.
 
+## Worktree mode (parallelize safely)
+
+Use `git worktree` when it reduces risk/time (long-running jobs, independent feature+fix tracks, keeping a clean baseline checkout) and you want parallel progress without stash/switch churn.
+
+### Decision rules
+
+- Prefer worktrees when:
+  - a long-running command will occupy the current checkout (training, large tests, export jobs), or
+  - you need a clean baseline checkout for comparison while iterating, or
+  - you want to run two independent changes in parallel.
+- Avoid auto-creating worktrees when disk impact may be high:
+  - if the repo tracks large binaries (e.g., Git LFS or committed datasets), ask first.
+
+### Create a worktree (conventions)
+
+1. Ensure worktree support exists:
+   - `git help -a | rg '^  worktree\\b'`
+   - If missing (older git), fall back to a normal feature branch in the current checkout.
+2. Choose a workspace-scoped location (do not scatter under repo root):
+   - `WT_ROOT=WORKSPACE/.codex/tmp/worktrees`
+   - `WT_PATH=$WT_ROOT/<slug>_<timestamp>`
+   - `WT_BRANCH=wt/<slug>-YYYYMMDD-HHMM`
+3. Create:
+   - `mkdir -p "$WT_ROOT"`
+   - `git worktree add "$WT_PATH" -b "$WT_BRANCH"`
+4. From this point on, run edits/gates inside the worktree:
+   - `cd "$WT_PATH"`
+
+### Run long jobs from a worktree
+
+- For short jobs: run in the foreground and actively poll to completion.
+- For long jobs: use `longrun-orchestrator` and make sure the command `cd`s into the worktree path (do not accidentally run from the base checkout).
+
+### Commit/push/merge with worktrees
+
+- Commit and push the worktree branch as the safety net once local gates pass (Option B allows push to the current feature branch).
+- Merging/rebasing onto protected branches or opening PRs still require explicit user confirmation.
+- After merge or abandonment:
+  - `git worktree remove "$WT_PATH"`
+  - `git worktree prune`
+
 ## Checkpointing & rollback strategy
 
 - Prefer small, reviewable commits as checkpoints.

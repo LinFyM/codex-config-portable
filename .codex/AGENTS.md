@@ -119,6 +119,21 @@
   - Use `gh-fix-ci` to diagnose failing GitHub checks, and `gh-address-comments` to address PR review comments (both are approval-gated by their own skills).
   - Opening PRs / merging remains an explicit user decision.
 
+## Git Worktrees (Parallel Work)
+- Use worktrees to avoid stash/switch churn and to enable true parallelism (e.g., long-running jobs, independent feature+fix tracks, keeping a clean baseline checkout).
+- Agent initiative:
+  - If parallelization materially reduces risk or time, proactively create a worktree by default.
+  - If the benefit is unclear or disk impact may be high, propose a worktree plan first and ask.
+- Conventions:
+  - Put extra worktrees under `WORKSPACE/.codex/tmp/worktrees/<slug>_<timestamp>/` (do not scatter under repo root).
+  - Branch naming: `wt/<slug>-YYYYMMDD-HHMM` (push as a backup once local gates pass).
+  - Keep outputs worktree-scoped (avoid clobbering shared `results/`); follow `Repo Hygiene` + `artifact-manager`.
+- Large tracked artifacts warning:
+  - If the repo tracks large binaries (e.g., via Git LFS or committed datasets), worktrees may duplicate large files; ask before creating.
+- Merge & cleanup:
+  - Merging/rebasing onto protected branches is always explicit-confirmation (see Git Workflow).
+  - After a worktree branch is merged or abandoned, remove the worktree and run `git worktree prune` (do not delete user data/artifacts without approval).
+
 ## Code Review (Automated Loop: Review -> Fix -> Re-review)
 - Use the latest available code model and high reasoning by default for reviews (keep `model`, `review_model`, and `model_reasoning_effort` aligned in `config.toml`).
 - Before finalizing non-trivial changes, run a local code review and treat it as a quality gate.
