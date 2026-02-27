@@ -41,6 +41,23 @@ EXCLUDED_EXTS = {
 
 SECRET_NAME_RE = re.compile(r"(secret|token|api[_-]?key|password|passwd|credential|private[_-]?key)", re.I)
 
+# If the source tree contains these directories, treat them as canonical
+# "paper material" buckets and prefer exporting only from them (plus README.md).
+KEYWORD_DIRS = {
+    "fig",
+    "figs",
+    "figure",
+    "figures",
+    "plot",
+    "plots",
+    "table",
+    "tables",
+    "metric",
+    "metrics",
+    "config",
+    "configs",
+}
+
 # Safety caps: paper exports should be small-ish and reproducible.
 MAX_FILE_BYTES_DEFAULT = 50 * 1024 * 1024  # 50 MiB
 MAX_TEX_BYTES_DEFAULT = 256 * 1024  # 256 KiB
@@ -98,6 +115,14 @@ def _iter_files(src: Path) -> Iterable[Path]:
             if fn.startswith("."):
                 continue
             yield root_p / fn
+
+
+def _is_in_keyword_bucket(rel: Path) -> bool:
+    # Check parent dirs only (file suffix doesn't matter here).
+    for part in rel.parts[:-1]:
+        if part.lower() in KEYWORD_DIRS:
+            return True
+    return False
 
 
 def _find_git_root(start: Path, *, max_up: int = 6) -> Path | None:
@@ -257,9 +282,10 @@ def export_paper_artifacts(
 
     out.mkdir(parents=True, exist_ok=True)
 
-    included: list[Path] = []
+    candidates: list[tuple[Path, int, bool]] = []
     skipped: dict[str, int] = {}
     total_bytes = 0
+    keyword_dirs_present = False
 
     for p in _iter_files(src):
         try:
@@ -267,12 +293,26 @@ def export_paper_artifacts(
         except FileNotFoundError:
             continue
         rel = p.relative_to(src)
+        if _is_in_keyword_bucket(rel):
+            keyword_dirs_present = True
+
         ok, reason = _should_include(rel, st.st_size, max_file_bytes=max_file_bytes, max_tex_bytes=max_tex_bytes)
         if not ok:
             skipped[reason or "skipped"] = skipped.get(reason or "skipped", 0) + 1
             continue
+        candidates.append((rel, int(st.st_size), _is_in_keyword_bucket(rel)))
+
+    included: list[Path] = []
+    for rel, size_b, in_kw in candidates:
+        if rel.name == "README.md":
+            included.append(rel)
+            total_bytes += size_b
+            continue
+        if keyword_dirs_present and not in_kw:
+            skipped["non_paper_bucket"] = skipped.get("non_paper_bucket", 0) + 1
+            continue
         included.append(rel)
-        total_bytes += int(st.st_size)
+        total_bytes += size_b
 
     included.sort()
 
@@ -390,4 +430,3 @@ def main(argv: list[str]) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main(sys.argv[1:]))
-
