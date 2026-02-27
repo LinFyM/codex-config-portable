@@ -160,3 +160,6 @@
 
 ## Continuous Improvement
 - If the same correction or preference appears repeatedly, propose updating AGENTS instructions so future sessions improve.
+
+## Paper Assets Sync (Server -> Local)
+- Convention: on the server use `paper-export` to export; on the client use `paper-sync` to pull incrementally.

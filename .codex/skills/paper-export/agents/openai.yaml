@@ -1,0 +1,4 @@
+interface:
+  display_name: "Paper Export"
+  short_description: "Export paper artifacts for paper-sync."
+  default_prompt: "Export paper-ready artifacts (figures/tables/metrics/config/README) for a given project/run_id from a source output directory into ~/project/exp/paper_exports/<project>/<run_id>/, generating a manifest with timestamp, git commit (if available), and metric summary."
