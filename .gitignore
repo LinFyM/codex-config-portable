@@ -11,6 +11,13 @@
 .codex/tmp/
 .codex/.sandbox/
 
+# Skill scripts may generate demo outputs; never commit them from this repo.
+output/
+
+# Worktree directories (superpowers default preference)
+.worktrees/
+worktrees/
+
 # Python cache
 **/__pycache__/
 **/*.pyc
