@@ -1,0 +1,4 @@
+interface:
+  display_name: "GH Codex Cloud Review"
+  short_description: "查看 Codex 云端审查在 PR 上的 thumbs-up/评论/检查，并排查无反馈"
+  default_prompt: "给定一个 PR 链接或编号，检查 Codex 云端审查是否已完成（thumbs up / 评论 / review / checks），并给出可执行的下一步与排查建议。"

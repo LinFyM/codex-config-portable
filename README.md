@@ -6,16 +6,8 @@ This repo stores reusable Codex global instructions and custom skills so they ca
 
 - `.codex/AGENTS.md`
 - `.codex/config.template.toml` (sanitized template)
-- `.codex/skills/` custom/reusable skills:
-  - `artifact-manager`
-  - `draw-io`
-  - `git-autopilot`
-  - `gpu-preflight`
-  - `longrun-orchestrator`
-  - `memory-flush`
-  - `memory-recall`
-  - `project-alignment`
-  - `workspace-cleanup`
+- `.codex/skills/` skills bundle (includes `superpowers` + `planning-with-files` and supporting utilities).
+  - See `.codex/skills/` for the authoritative list (this README intentionally does not enumerate every skill).
 
 ## Not Included (intentionally)
 
