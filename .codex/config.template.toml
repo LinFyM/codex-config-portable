@@ -2,18 +2,21 @@
 # Copy to ~/.codex/config.toml and adjust local fields.
 
 # Default model for interactive + exec sessions.
-model = "gpt-5.3-codex"
+model = "gpt-5.4"
+model_context_window = 1050000
 
 # Model used by `/review` (defaults to the current session model if unset).
-review_model = "gpt-5.3-codex"
+review_model = "gpt-5.4"
 
-# Use at least high for review-heavy workflows.
 model_reasoning_effort = "xhigh"
+plan_mode_reasoning_effort = "xhigh"
 personality = "friendly"
+sandbox_mode = "danger-full-access"
+approval_policy = "never"
 
 [mcp_servers.linear]
 url = "https://mcp.linear.app/mcp"
-enabled = false
+enabled = true
 
 [mcp_servers.openaiDeveloperDocs]
 url = "https://developers.openai.com/mcp"
@@ -21,14 +24,27 @@ url = "https://developers.openai.com/mcp"
 [mcp_servers.figma]
 url = "https://mcp.figma.com/mcp"
 
+[notice]
+hide_full_access_warning = true
+
 [notice.model_migrations]
-"gpt-5.2" = "gpt-5.2-codex"
+"gpt-5.2" = "gpt-5.3-codex"
 
 [tui]
-status_line = ["model-with-reasoning", "current-dir", "git-branch", "context-window-size", "used-tokens", "total-input-tokens", "total-output-tokens"]
+status_line = ["model-with-reasoning", "current-dir", "git-branch", "context-window-size", "context-remaining", "session-id"]
+theme = "catppuccin-mocha"
 
-# Example project trust entry (replace with your local absolute path).
-# [projects."/ABS/PATH/TO/YOUR/PROJECT"]
+[features]
+multi_agent = true
+apps = true
+prevent_idle_sleep = true
+voice_transcription = true
+default_mode_request_user_input = true
+
+# Example project trust entries (replace with your local absolute paths).
+# [projects."/ABS/PATH/TO/YOUR/PROJECT_A"]
+# trust_level = "trusted"
+# [projects."/ABS/PATH/TO/YOUR/PROJECT_B"]
 # trust_level = "trusted"
 
 # Optional local proxy.
