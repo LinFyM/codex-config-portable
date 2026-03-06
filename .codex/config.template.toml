@@ -4,6 +4,7 @@
 # Default model for interactive + exec sessions.
 model = "gpt-5.4"
 model_context_window = 1050000
+model_auto_compact_token_limit = 970000
 
 # Model used by `/review` (defaults to the current session model if unset).
 review_model = "gpt-5.4"
