@@ -42,7 +42,6 @@ import argparse
 import logging
 import os
 import sys
-from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional
 
@@ -51,21 +50,7 @@ from huggingface_hub import DatasetCard, get_token, login
 from torch import cuda
 from tqdm.auto import tqdm
 from transformers import AutoTokenizer
-try:
-    from vllm import LLM, SamplingParams  # type: ignore
-except ImportError:  # pragma: no cover
-    # This script is intended to run under `uv run ...`, which will install `vllm`.
-    # Keep module import usable for documentation/testing environments that do not have vLLM installed.
-    LLM = None  # type: ignore
-
-    @dataclass
-    class SamplingParams:  # type: ignore
-        temperature: float
-        top_p: float
-        top_k: int
-        min_p: float
-        max_tokens: int
-        repetition_penalty: float
+from vllm import LLM, SamplingParams
 
 # Enable HF Transfer for faster downloads
 os.environ["HF_HUB_ENABLE_HF_TRANSFER"] = "1"
@@ -122,11 +107,6 @@ def create_dataset_card(
 
 Note: Prompts exceeding the maximum model length were skipped and have empty responses."""
 
-    max_model_len_fragment = ""
-    if max_model_len_used:
-        # Render as a bash line continuation + an extra argument line.
-        max_model_len_fragment = f" \\\n    --max-model-len {max_model_len_used}"
-
     return f"""---
 tags:
 - generated
@@ -180,7 +160,7 @@ uv run https://huggingface.co/datasets/uv-scripts/vllm/raw/main/generate-respons
     --temperature {sampling_params.temperature} \\
     --top-p {sampling_params.top_p} \\
     --top-k {sampling_params.top_k} \\
-    --max-tokens {sampling_params.max_tokens}{max_model_len_fragment}
+    --max-tokens {sampling_params.max_tokens}{f" \\\\\\n    --max-model-len {max_model_len_used}" if max_model_len_used else ""}
 ```
 """
 
@@ -267,12 +247,6 @@ def main(
     if max_model_len is not None:
         vllm_kwargs["max_model_len"] = max_model_len
         logger.info(f"Using max_model_len={max_model_len}")
-
-    if LLM is None:  # pragma: no cover
-        logger.error(
-            "vLLM is not installed. Run this script via `uv run ...` to install dependencies (vllm>=0.8.5)."
-        )
-        sys.exit(1)
 
     llm = LLM(**vllm_kwargs)
 

@@ -147,7 +147,9 @@ def _validate_audio(path: Path) -> None:
         _die(f"Audio file not found: {path}")
     size = path.stat().st_size
     if size > MAX_AUDIO_BYTES:
-        _die(f"Audio file exceeds 25MB upload limit ({size} bytes): {path}")
+        _warn(
+            f"Audio file exceeds 25MB limit ({size} bytes): {path}"
+        )
 
 
 def _build_payload(

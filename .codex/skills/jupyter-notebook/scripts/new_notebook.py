@@ -107,8 +107,7 @@ def main() -> None:
 
     script_path = Path(__file__).resolve()
     skill_dir = script_path.parents[1]
-    # Default outputs should land in the user's active workspace, not in the global skill install repo.
-    repo_root = find_repo_root(Path.cwd())
+    repo_root = find_repo_root(skill_dir)
 
     notebook = load_template(skill_dir, args.kind)
     update_title(notebook, args.kind, args.title)

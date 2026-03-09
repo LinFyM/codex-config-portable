@@ -29,7 +29,7 @@
   2. `superpowers:using-git-worktrees` (isolated workspace)
   3. `superpowers:writing-plans` (implementation plan in `docs/plans/`)
   4. `superpowers:executing-plans` or `superpowers:subagent-driven-development`
-  5. `superpowers:requesting-code-review` + local `codex review --uncommitted`
+  5. `superpowers:requesting-code-review` + local persistent review conversation via `codex-persistent-terminal`
   6. `superpowers:finishing-a-development-branch` (complete branch flow)
 - Always include explicit `Final Goal`, `Definition of Success`, and `Evidence Plan` in the plan/design artifacts.
 - Never declare completion without verification evidence. If blocked, report blocker, risk, and next action explicitly.
@@ -104,9 +104,9 @@
 - Do not work directly on protected branches (`main`/`master`/release) unless the user explicitly requests it; use a feature branch.
 - For non-trivial work, checkpoint with small, reviewable commits; push the feature branch as a backup once local gates pass.
 - Before opening any PR, you must run local review and resolve findings:
-  - preferred: `codex review --uncommitted`
-  - older kernel fallback: `codex exec -s danger-full-access review --uncommitted`
-  - if P0/P1 issues are found, fix and re-run review until cleared or explicitly escalated.
+  - preferred: start a new tmux-backed persistent review conversation via `codex-persistent-terminal`, ask it to perform the local review, and keep all follow-up fixes + re-review inside that same conversation.
+  - if the review terminal is lost, recover the same review conversation with `codex-persistent-terminal` and `codex resume`; do not fall back to spawning a fresh one-shot `codex exec` review by default.
+  - if P0/P1 issues are found, fix and continue the same persistent review conversation until cleared or explicitly escalated.
 - Allowed without extra confirmation (low-risk): `git status`, `git diff`, `git add`, `git commit`, `git push` (feature branch).
 - Must ask for explicit confirmation (high-impact): opening PRs, merging/rebasing onto protected branches, remote URL changes, deleting branches, history rewrites, destructive operations (`push --force*`, `git reset --hard`, broad cleanups).
 - For GitHub automation, first verify `gh auth status -h github.com`; if unauthenticated, ask the user to run `gh auth login`.
@@ -129,7 +129,8 @@
 - Use the latest available code model and high reasoning by default for reviews (keep `model`, `review_model`, `model_reasoning_effort` aligned in `config.toml`).
 - Treat review as a gate; if P0/P1 issues are found, fix and re-review (cap iterations, then escalate).
 - PR gate requirement: no PR creation before a successful local Codex review run (or explicit user-approved exception).
-- Use `superpowers:requesting-code-review` during implementation, then enforce local `codex review` before PR.
+- Use `superpowers:requesting-code-review` during implementation, then enforce a local tmux-backed persistent Codex review conversation before PR.
+- Local review persistence rule: do not treat local review as a series of independent one-shot `exec` sessions. Open one persistent review conversation, keep feeding diffs/findings/fixes back into that same conversation, and only finish when that conversation reports no remaining blocking issues or the user explicitly accepts an escalation.
 
 ## GitHub Codex Cloud Review (Visibility Rule)
 - In some repos/orgs, Codex “cloud review” may signal **pass** by only adding a 👍 reaction on the PR, with no comment/review.

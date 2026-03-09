@@ -16,7 +16,6 @@ Usage:
 from __future__ import annotations
 
 import json
-import re
 import subprocess
 import sys
 from typing import Any
@@ -124,15 +123,12 @@ def gh_pr_view_json(fields: str) -> dict[str, Any]:
 def get_current_pr_ref() -> tuple[str, str, int]:
     """
     Resolve the PR for the current branch (whatever gh considers associated).
-    Robust for fork-based PRs by parsing the PR URL, which always points to the base repository.
+    Works for cross-repo PRs too, by reading head repository owner/name.
     """
-    pr = gh_pr_view_json("number,url")
-    url = str(pr["url"])
-    m = re.match("^https?://github\\.com/([^/]+)/([^/]+)/pull/(\\d+)", url)
-    if not m:
-        raise RuntimeError(f"Unexpected PR url format from gh pr view: {url}")
-    owner, repo, number_s = m.group(1), m.group(2), m.group(3)
-    number = int(number_s)
+    pr = gh_pr_view_json("number,headRepositoryOwner,headRepository")
+    owner = pr["headRepositoryOwner"]["login"]
+    repo = pr["headRepository"]["name"]
+    number = int(pr["number"])
     return owner, repo, number
 
 
@@ -180,10 +176,6 @@ def fetch_all(owner: str, repo: str, number: int) -> dict[str, Any]:
     reviews_cursor: str | None = None
     threads_cursor: str | None = None
 
-    comments_done = False
-    reviews_done = False
-    threads_done = False
-
     pr_meta: dict[str, Any] | None = None
 
     while True:
@@ -214,34 +206,15 @@ def fetch_all(owner: str, repo: str, number: int) -> dict[str, Any]:
         r = pr["reviews"]
         t = pr["reviewThreads"]
 
-        # Avoid duplicates: once a connection is finished, do not append its page-1 data again
-        # on subsequent iterations while other connections are still paginating.
-        if not comments_done:
-            conversation_comments.extend(c.get("nodes") or [])
-        if not reviews_done:
-            reviews.extend(r.get("nodes") or [])
-        if not threads_done:
-            review_threads.extend(t.get("nodes") or [])
+        conversation_comments.extend(c.get("nodes") or [])
+        reviews.extend(r.get("nodes") or [])
+        review_threads.extend(t.get("nodes") or [])
 
-        if c["pageInfo"]["hasNextPage"]:
-            comments_cursor = c["pageInfo"]["endCursor"]
-        else:
-            comments_cursor = None
-            comments_done = True
+        comments_cursor = c["pageInfo"]["endCursor"] if c["pageInfo"]["hasNextPage"] else None
+        reviews_cursor = r["pageInfo"]["endCursor"] if r["pageInfo"]["hasNextPage"] else None
+        threads_cursor = t["pageInfo"]["endCursor"] if t["pageInfo"]["hasNextPage"] else None
 
-        if r["pageInfo"]["hasNextPage"]:
-            reviews_cursor = r["pageInfo"]["endCursor"]
-        else:
-            reviews_cursor = None
-            reviews_done = True
-
-        if t["pageInfo"]["hasNextPage"]:
-            threads_cursor = t["pageInfo"]["endCursor"]
-        else:
-            threads_cursor = None
-            threads_done = True
-
-        if comments_done and reviews_done and threads_done:
+        if not (comments_cursor or reviews_cursor or threads_cursor):
             break
 
     assert pr_meta is not None
@@ -261,7 +234,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    if any(arg in ("-h", "--help") for arg in sys.argv[1:]):
-        print(__doc__.strip())
-        raise SystemExit(0)
     main()

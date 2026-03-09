@@ -37,20 +37,6 @@ Stop. Don't proceed to Step 2.
 
 **If tests pass:** Continue to Step 2.
 
-### Step 1.5: Capture Feature Branch + Worktree Path (Before Switching Branches)
-
-You must capture the feature branch name and its worktree path *before* any `git checkout` that might switch you back to the base branch.
-
-```bash
-FEATURE_BRANCH=$(git rev-parse --abbrev-ref HEAD)
-FEATURE_WT_PATH=$(git worktree list --porcelain | awk -v b="branch refs/heads/$FEATURE_BRANCH" '
-  $1=="worktree"{wt=$2}
-  $1=="branch" && $2==b{print wt; exit}
-')
-```
-
-If `FEATURE_WT_PATH` is empty, do not attempt cleanup; report the situation and ask for clarification.
-
 ### Step 2: Determine Base Branch
 
 ```bash
@@ -117,7 +103,7 @@ EOF
 )"
 ```
 
-Then: Keep the worktree (do not cleanup). You may need it for review feedback and follow-up fixes.
+Then: Cleanup worktree (Step 5)
 
 #### Option 3: Keep As-Is
 
@@ -149,16 +135,19 @@ Then: Cleanup worktree (Step 5)
 
 ### Step 5: Cleanup Worktree
 
-**For Options 1 and 4 only:**
+**For Options 1, 2, 4:**
 
+Check if in worktree:
 ```bash
-if [ -n "$FEATURE_WT_PATH" ]; then
-  git worktree remove "$FEATURE_WT_PATH"
-fi
+git worktree list | grep $(git branch --show-current)
+```
+
+If yes:
+```bash
+git worktree remove <worktree-path>
 ```
 
 **For Option 3:** Keep worktree.
-**For Option 2:** Keep worktree.
 
 ## Quick Reference
 

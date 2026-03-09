@@ -1,0 +1,4 @@
+interface:
+  display_name: "Codex Persistent Terminal"
+  short_description: "Run Codex in tmux and resume the same conversation."
+  default_prompt: "Create or monitor a long-lived tmux-backed Codex session, recover it after terminal loss, and prefer SESSION_ID-based resume when available."

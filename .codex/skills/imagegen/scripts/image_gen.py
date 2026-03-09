@@ -74,7 +74,7 @@ def _check_image_paths(paths: Iterable[str]) -> List[Path]:
         if not path.exists():
             _die(f"Image file not found: {path}")
         if path.stat().st_size > MAX_IMAGE_BYTES:
-            _die(f"Image exceeds 50MB limit: {path}")
+            _warn(f"Image exceeds 50MB limit: {path}")
         resolved.append(path)
     return resolved
 
@@ -306,7 +306,7 @@ def _decode_write_and_downscale(
 def _create_client():
     try:
         from openai import OpenAI
-    except ImportError:
+    except ImportError as exc:
         _die("openai SDK not installed. Install with `uv pip install openai`.")
     return OpenAI()
 
@@ -675,15 +675,7 @@ def _edit(args: argparse.Namespace) -> None:
         if mask_path.suffix.lower() != ".png":
             _warn(f"Mask should be a PNG with an alpha channel: {mask_path}")
         if mask_path.stat().st_size > MAX_IMAGE_BYTES:
-            _die(f"Mask exceeds 50MB limit: {mask_path}")
-
-    # API contract: total payload per request is capped (images + mask).
-    total_bytes = sum(p.stat().st_size for p in image_paths) + (mask_path.stat().st_size if mask_path else 0)
-    if total_bytes > MAX_IMAGE_BYTES:
-        _die(
-            f"Total image payload exceeds 50MB limit ({total_bytes} bytes). "
-            f"Inputs: {len(image_paths)} image(s){' + mask' if mask_path else ''}."
-        )
+            _warn(f"Mask exceeds 50MB limit: {mask_path}")
 
     payload = {
         "model": args.model,
