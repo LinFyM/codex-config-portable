@@ -23,10 +23,10 @@ Use this skill to produce:
 
 ## Mandatory Docs-First Workflow
 
-Use `$openai-docs` first whenever building or changing a ChatGPT Apps SDK app.
+Use `$openai-docs` to verify the current official API or behavior being built or changed. Reuse relevant documentation already fetched in this task; narrow fixes do not require the full scaffold workflow.
 
 1. Invoke `$openai-docs` (preferred) or call the OpenAI docs MCP server directly.
-2. Fetch current Apps SDK docs before writing code, especially (baseline pages):
+2. Fetch the current Apps SDK page relevant to the change before writing code. Select from:
    - `apps-sdk/build/mcp-server`
    - `apps-sdk/build/chatgpt-ui`
    - `apps-sdk/build/examples`
@@ -38,7 +38,7 @@ Use `$openai-docs` first whenever building or changing a ChatGPT Apps SDK app.
    - `apps-sdk/deploy/submission`
    - `apps-sdk/app-submission-guidelines`
 5. Cite the docs URLs you used when explaining design choices or generated scaffolds.
-6. Prefer current docs guidance over older repo patterns when they differ, and call out compatibility aliases explicitly.
+6. Reconcile current docs with the repository's installed version and verified compatibility contract. Do not upgrade dependencies or architecture solely because an example is newer; call out relevant compatibility aliases.
 7. If doc search times out or returns poor matches, fetch the canonical Apps SDK pages directly by URL and continue; do not let search failure block scaffolding.
 
 If `$openai-docs` is unavailable, use:
@@ -46,9 +46,9 @@ If `$openai-docs` is unavailable, use:
 - `mcp__openaiDeveloperDocs__search_openai_docs`
 - `mcp__openaiDeveloperDocs__fetch_openai_doc`
 
-Read `references/apps-sdk-docs-workflow.md` for suggested doc queries and a compact checklist.
-Read `references/app-archetypes.md` to classify the request into a small number of supported app shapes before choosing examples or scaffolds.
-Read `references/repo-contract-and-validation.md` when generating or reviewing a repo so the output stays inside a stable “working app” contract.
+Read `references/apps-sdk-docs-workflow.md` when source selection or SDK workflow remains unclear.
+Read `references/app-archetypes.md` when choosing or materially changing architecture, before choosing examples or scaffolds.
+Read `references/repo-contract-and-validation.md` for a new scaffold or a review of the whole app. For a narrow fix, validate the affected behavior and preserve the existing architecture.
 Read `references/search-fetch-standard.md` when the app is connector-like, data-only, sync-oriented, or meant to work well with company knowledge or deep research.
 Read `references/upstream-example-workflow.md` when starting a greenfield app or when deciding whether to adapt an upstream example or use the local fallback scaffold.
 Read `references/window-openai-patterns.md` when the task needs ChatGPT-specific widget behavior or when translating repo examples that use wrapper-specific `app.*` helpers.
@@ -78,7 +78,7 @@ When responding, ask for or infer these inputs before coding:
 
 ## Classify The App Before Choosing Code
 
-Before choosing examples, repo shape, or scaffolds, classify the request into one primary archetype and state it.
+For a new scaffold or material architecture change, classify the request into one primary archetype. Preserve the existing architecture for a narrow fix.
 
 - `tool-only`
 - `vanilla-widget`
@@ -111,7 +111,7 @@ Copy the smallest matching example, remove unrelated demo code, then patch it to
 
 ### 0. Classify The App Archetype
 
-Pick one primary archetype before planning tools or choosing a starting point.
+For new scaffolds or material architecture changes, pick one primary archetype before planning tools or choosing a starting point.
 
 - Prefer a single primary archetype instead of mixing several.
 - If the request is broad, infer the smallest archetype that can still satisfy it.
@@ -292,9 +292,9 @@ Use it to choose patterns for:
 
 ## Output Expectations
 
-When using this skill to scaffold code, produce output in this order unless the user asks otherwise:
+Report the implemented outcome, useful run instructions, validation, and material limitations with detail proportional to the task. For a new scaffold, the following are useful handoff topics; include only what helps the user use or assess the result, without a fixed output order:
 
-- For direct scaffold requests, do not stop at the plan: give the brief plan, then create the files immediately.
+- For direct scaffold requests, create the files and complete relevant checks; do not stop at a plan.
 
 1. Primary app archetype chosen and why
 2. Tool plan and architecture choice (minimal vs decoupled)

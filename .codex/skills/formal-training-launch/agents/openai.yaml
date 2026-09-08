@@ -1,0 +1,7 @@
+interface:
+  display_name: "Formal Training Launch"
+  short_description: "Guard canonical expensive ML launches"
+  default_prompt: "Use $formal-training-launch only for a canonical expensive ML run; reuse an unchanged launch contract and avoid stacking planning, persistence, debugging, or approval workflows."
+
+policy:
+  allow_implicit_invocation: true

@@ -22,24 +22,23 @@ Prefer the bundled templates and the helper script for consistent structure and 
 ## Decision tree
 - If the request is exploratory, analytical, or hypothesis-driven, choose `experiment`.
 - If the request is instructional, step-by-step, or audience-specific, choose `tutorial`.
-- If editing an existing notebook, treat it as a refactor: preserve intent and improve structure.
+- For an existing notebook, make the requested edit while preserving unrelated cells, outputs, and structure.
 
 ## Skill path (set once)
 
 ```bash
-export CODEX_HOME="${CODEX_HOME:-$HOME/.codex}"
-export JUPYTER_NOTEBOOK_CLI="$CODEX_HOME/skills/jupyter-notebook/scripts/new_notebook.py"
+export JUPYTER_NOTEBOOK_CLI="<skill-dir>/scripts/new_notebook.py"
 ```
 
-User-scoped skills install under `$CODEX_HOME/skills` (default: `~/.codex/skills`).
+Resolve `<skill-dir>` from this skill's advertised installation path. Preserve the existing `CODEX_HOME`; do not set it merely to locate the helper.
 
 ## Workflow
 1. Lock the intent.
 Identify the notebook kind: `experiment` or `tutorial`.
 Capture the objective, audience, and what "done" looks like.
 
-2. Scaffold from the template.
-Use the helper script to avoid hand-authoring raw notebook JSON.
+2. For a new notebook, scaffold from the template.
+Use the helper script to avoid hand-authoring raw notebook JSON. Skip scaffolding for existing notebooks.
 
 ```bash
 uv run --python 3.12 python "$JUPYTER_NOTEBOOK_CLI" \
@@ -70,7 +69,7 @@ Prefer targeted edits over full rewrites.
 If you must edit raw JSON, review `references/notebook-structure.md` first.
 
 6. Validate the result.
-Run the notebook top-to-bottom when the environment allows.
+Validate edited cells and their dependencies. Run top-to-bottom for a new notebook or changes affecting execution state when execution fits the authorized resource budget. Do not launch expensive training, paid calls, or external writes solely to validate formatting or prose changes.
 If execution is not possible, say so explicitly and call out how to validate locally.
 Use the final pass checklist in `references/quality-checklist.md`.
 
@@ -79,7 +78,7 @@ Use the final pass checklist in `references/quality-checklist.md`.
 - The helper script loads a template, updates the title cell, and writes a notebook.
 
 Script path:
-- `$JUPYTER_NOTEBOOK_CLI` (installed default: `$CODEX_HOME/skills/jupyter-notebook/scripts/new_notebook.py`)
+- `$JUPYTER_NOTEBOOK_CLI` (resolved from the current skill installation)
 
 ## Temp and output conventions
 - Use `tmp/jupyter-notebook/` for intermediate files; delete when done.

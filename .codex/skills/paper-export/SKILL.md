@@ -1,6 +1,6 @@
 ---
 name: paper-export
-description: Export paper-ready artifacts (figures/tables/metrics/config/README and small tex snippets) from an experiment output directory into ~/project/exp/paper_exports/{project}/{run_id}/ for local incremental pulling via paper-sync. Use when you need a stable, repeatable export layout with a manifest.json (timestamp, run_id, git commit if available, and a best-effort metric summary). Safe by default (no destructive deletes; skips large training artifacts, checkpoints, and common binary blobs).
+description: Export paper-ready artifacts (figures, tables, metrics, configs, README files, and small TeX snippets) from an experiment output directory into a stable export tree for incremental pulling with paper-sync. Uses a manifest with provenance and safe size/type filters; never exports checkpoints or secret-like files by default.
 ---
 
 # Paper Export
@@ -10,15 +10,17 @@ description: Export paper-ready artifacts (figures/tables/metrics/config/README 
 Run:
 
 ```bash
-python /data0/user/ymdai/.codex/skills/paper-export/scripts/paper_export.py \
+python3 ~/.codex/skills/paper-export/scripts/paper_export.py \
   --project <project> \
   --run-id <run_id> \
   --src <experiment_output_dir>
 ```
 
-This writes to the default export directory:
+The helper's built-in fallback export directory is:
 
 `~/project/exp/paper_exports/<project>/<run_id>/`
+
+Use `--out` with the established paper-sync destination. Use the built-in fallback only when it matches the active storage convention.
 
 It will also generate:
 - `manifest.json`: export timestamp, run_id, git commit (best-effort), and a best-effort metric summary
@@ -45,6 +47,9 @@ Safety defaults:
 ## Notes For Agents
 
 - Prefer exporting from a single run output directory (one `--src`) so the exported tree stays stable.
+- Resolve this skill from the current session's advertised installation path; do not infer that a data-directory installation is stale.
+- Use `--out <path>` when the active `paper-sync` configuration expects a
+  different export root from the default.
 - If the export looks incomplete, inspect `manifest.json` warnings and re-run; the tool is designed to be repeatable.
 
 ## Resources

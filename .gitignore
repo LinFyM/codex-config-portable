@@ -1,27 +1,51 @@
-# Never commit local/private Codex runtime data
+# Never commit local/private Codex runtime data.
 .codex/auth.json
 .codex/.credentials.json
+.codex/config.toml
 .codex/history.jsonl
 .codex/models_cache.json
 .codex/cap_sid
+.codex/installation_id
+.codex/version.json
+.codex/*.sqlite*
+.codex/*.log
+.codex/*.bak*
+.codex/*.backup*
+.codex/AGENTS.md.*
 .codex/sessions/
 .codex/archived_sessions/
 .codex/shell_snapshots/
 .codex/log/
+.codex/logs/
 .codex/tmp/
+.codex/.tmp/
+.codex/cache/
+.codex/backups/
+.codex/memories/
+.codex/plugins/
+.codex/vendor_imports/
+.codex/rules/
+.codex/app-server-control/
+.codex/skills/.system/.codex-system-skills.marker
 .codex/.sandbox/
 
-# Skill scripts may generate demo outputs; never commit them from this repo.
+# Skill scripts may generate demo outputs.
 output/
 
-# Worktree directories (superpowers default preference)
+# Local worktree directories.
 .worktrees/
 worktrees/
 
-# Python cache
+# Python cache.
 **/__pycache__/
 **/*.pyc
+**/*.pyo
 
-# OS/editor noise
+# Local credentials; keep explicit example templates portable.
+.env
+.env.*
+!.env.example
+
+# OS/editor noise.
 .DS_Store
 .vscode/

@@ -42,7 +42,7 @@ This shows counts (not who reacted):
 gh pr view <PR_NUMBER> --json reactionGroups
 ```
 
-If you see `THUMBS_UP` totalCount > 0, it's likely the "pass" signal.
+A nonzero `THUMBS_UP` count only confirms that someone reacted; verify the actor before interpreting it as a Codex signal.
 
 ### 2) Authoritative Check: Was The 👍 From Codex Bot?
 
@@ -57,13 +57,6 @@ gh api -H "Accept: application/vnd.github+json" \
 Look for:
 - `user.login == "chatgpt-codex-connector[bot]"`
 - `content == "+1"` (thumbs up)
-
-Example (this repo):
-
-```bash
-gh api -H "Accept: application/vnd.github+json" \
-  repos/LinFyM/Episodic-Memory-Chatbot/issues/18/reactions
-```
 
 ### 3) If There Are Findings: Check Comments / Reviews
 
@@ -96,11 +89,15 @@ If there is no bot reaction and no bot comments/reviews after ~10-15 minutes:
 
 1. Confirm the PR is in the repo/org where the Codex GitHub connector is installed (permissions matter).
 2. Confirm you are looking at the correct PR number and repository.
-3. Re-trigger (only if your org uses a mention-trigger flow):
+3. Keep diagnosis read-only by default. Re-trigger only when the user asks for
+   it or the repository's established workflow explicitly calls for a mention:
 
 ```bash
-gh pr comment <PR_NUMBER> -b \"@chatgpt-codex-connector please review\"
+gh pr comment <PR_NUMBER> -b '@chatgpt-codex-connector please review'
 ```
+
+   Posting this comment is a write operation; do not perform it merely because
+   the read-only check found no feedback.
 
 4. If still nothing: treat it as an infra/integration issue (not code) and escalate with:
    - PR URL

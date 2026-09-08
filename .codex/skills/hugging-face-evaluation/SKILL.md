@@ -47,21 +47,15 @@ Note: vLLM dependencies are installed automatically via PEP 723 script headers w
 
 # IMPORTANT: Using This Skill
 
-## ⚠️ CRITICAL: Check for Existing PRs Before Creating New Ones
+## Check for Duplicate Evaluation PRs
 
-**Before creating ANY pull request with `--create-pr`, you MUST check for existing open PRs:**
+Before using `--create-pr`, inspect open PRs for the same model-index changes:
 
 ```bash
 uv run scripts/evaluation_manager.py get-prs --repo-id "username/model-name"
 ```
 
-**If open PRs exist:**
-1. **DO NOT create a new PR** - this creates duplicate work for maintainers
-2. **Warn the user** that open PRs already exist
-3. **Show the user** the existing PR URLs so they can review them
-4. Only proceed if the user explicitly confirms they want to create another PR
-
-This prevents spamming model repositories with duplicate evaluation PRs.
+If the requested changes are already covered, reuse an authorized task-owned PR or report the existing PR as the result. Unrelated open PRs do not block a new authorized PR. Ask only when resolving overlap would alter another contributor's work or the intended contribution remains ambiguous.
 
 ---
 
@@ -79,7 +73,7 @@ uv run scripts/evaluation_manager.py extract-readme --help
 ```
 Key workflow (matches CLI help):
 
-1) `get-prs` → check for existing open PRs first
+1) When preparing a PR, `get-prs` → check for duplicate evaluation changes
 2) `inspect-tables` → find table numbers/columns  
 3) `extract-readme --table N` → prints YAML by default  
 4) add `--apply` (push) or `--create-pr` to write changes
@@ -145,7 +139,7 @@ The skill includes Python scripts in `scripts/` to perform operations.
 ### Prerequisites
 - Preferred: use `uv run` (PEP 723 header auto-installs deps)
 - Or install manually: `pip install huggingface-hub markdown-it-py python-dotenv pyyaml requests`
-- Set `HF_TOKEN` environment variable with Write-access token
+- Public read-only requests and local artifact creation do not require an HF token. Use existing authentication when available; require suitable credentials only for private/gated access or authenticated mutations, with write permission only for writes. Never print token content.
 - For Artificial Analysis: Set `AA_API_KEY` environment variable
 - `.env` is loaded automatically if `python-dotenv` is installed
 
@@ -524,7 +518,7 @@ WARNING: Do not use markdown formatting in the model name. Use the exact name fr
 ### Best Practices
 
 1. **Check for existing PRs first**: Run `get-prs` before creating any new PR to avoid duplicates
-2. **Always start with `inspect-tables`**: See table structure and get the correct extraction command
+2. **For README extraction, start with `inspect-tables`**: See table structure and get the correct extraction command
 3. **Use `--help` for guidance**: Run `inspect-tables --help` to see the complete workflow
 4. **Preview first**: Default behavior prints YAML; review it before using `--apply` or `--create-pr`
 5. **Verify extracted values**: Compare YAML output against the README table manually
@@ -570,15 +564,13 @@ uv run scripts/evaluation_manager.py extract-readme \
 uv run scripts/evaluation_manager.py get-prs \
   --repo-id "other-username/their-model"
 
-# Step 2: If NO open PRs exist, proceed with creating one
+# Step 2: If no PR covers these evaluation changes, create the authorized PR
 uv run scripts/evaluation_manager.py extract-readme \
   --repo-id "other-username/their-model" \
   --create-pr
 
-# If open PRs DO exist:
-# - Warn the user about existing PRs
-# - Show them the PR URLs
-# - Do NOT create a new PR unless user explicitly confirms
+# If an existing PR covers these changes, reuse an authorized task-owned PR
+# or report it. Unrelated open PRs do not block this contribution.
 ```
 
 **Import Fresh Benchmarks:**
@@ -587,7 +579,7 @@ uv run scripts/evaluation_manager.py extract-readme \
 uv run scripts/evaluation_manager.py get-prs \
   --repo-id "anthropic/claude-sonnet-4"
 
-# Step 2: If no PRs, import from Artificial Analysis
+# Step 2: If no duplicate evaluation PR exists, import the requested results
 AA_API_KEY=... uv run scripts/evaluation_manager.py import-aa \
   --creator-slug "anthropic" \
   --model-name "claude-sonnet-4" \

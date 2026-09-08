@@ -1,54 +1,79 @@
-# Portable template for Codex CLI.
-# Copy to ~/.codex/config.toml and adjust local fields.
+# Portable snapshot of the current Codex preferences (2026-09-08).
+# Copy to the active Codex home's config.toml after reviewing local settings.
+# Models, experimental features, and plugins depend on the installed Codex version.
 
-# Default model for interactive + exec sessions.
-model = "gpt-5.4"
-model_context_window = 1050000
-model_auto_compact_token_limit = 970000
-
-# Model used by `/review` (defaults to the current session model if unset).
-review_model = "gpt-5.4"
-
-model_reasoning_effort = "xhigh"
+model = "gpt-6-astra"
+model_reasoning_effort = "high"
 plan_mode_reasoning_effort = "xhigh"
 personality = "friendly"
 sandbox_mode = "danger-full-access"
 approval_policy = "never"
+approvals_reviewer = "user"
+service_tier = "default"
+suppress_unstable_features_warning = true
 
-[mcp_servers.linear]
-url = "https://mcp.linear.app/mcp"
-enabled = true
+# Context limits and review_model currently use Codex defaults.
 
 [mcp_servers.openaiDeveloperDocs]
 url = "https://developers.openai.com/mcp"
 
-[mcp_servers.figma]
-url = "https://mcp.figma.com/mcp"
-
 [notice]
 hide_full_access_warning = true
-
-[notice.model_migrations]
-"gpt-5.2" = "gpt-5.3-codex"
+hide_rate_limit_model_nudge = true
+fast_default_opt_out = true
 
 [tui]
-status_line = ["model-with-reasoning", "current-dir", "git-branch", "context-window-size", "context-remaining", "session-id"]
+status_line = ["model-with-reasoning", "git-branch", "context-window-size", "context-used", "weekly-limit"]
 theme = "catppuccin-mocha"
 
 [features]
 multi_agent = true
 apps = true
 prevent_idle_sleep = true
-voice_transcription = true
 default_mode_request_user_input = true
+guardian_approval = true
+image_detail_original = true
+memories = true
+external_migration = true
+goals = true
+terminal_resize_reflow = true
+mentions_v2 = true
 
-# Example project trust entries (replace with your local absolute paths).
-# [projects."/ABS/PATH/TO/YOUR/PROJECT_A"]
-# trust_level = "trusted"
-# [projects."/ABS/PATH/TO/YOUR/PROJECT_B"]
+[features.context_management]
+experimental_mode = true
+
+[memories]
+use_memories = true
+generate_memories = true
+
+# Enablement preferences only; install/connect plugins on each machine.
+[plugins."google-calendar@openai-curated"]
+enabled = true
+
+[plugins."gmail@openai-curated"]
+enabled = true
+
+[plugins."github@openai-curated"]
+enabled = true
+
+[plugins."hugging-face@openai-curated"]
+enabled = true
+
+[plugins."figma@openai-curated"]
+enabled = true
+
+[plugins."visualize@openai-bundled"]
+enabled = true
+
+[plugins."sites@openai-bundled"]
+enabled = true
+
+# Machine-local marketplace paths and UI onboarding state are omitted.
+# Example project trust entry (replace with an actual local path).
+# [projects."/ABS/PATH/TO/YOUR/PROJECT"]
 # trust_level = "trusted"
 
-# Optional local proxy.
+# Optional local proxy (replace with the local endpoint).
 # [proxy]
 # http_proxy = "http://127.0.0.1:7890"
 # https_proxy = "http://127.0.0.1:7890"

@@ -2,7 +2,9 @@
 
 Use this reference to keep code generation aligned with current OpenAI Apps SDK docs.
 
-## Always Fetch These Pages (Baseline)
+## Select the Relevant Official Page
+
+Fetch the page supporting the API or behavior being changed; do not load the whole list for a narrow fix. Reuse relevant pages already fetched in this task.
 
 - `https://developers.openai.com/apps-sdk/build/mcp-server/`
 - `https://developers.openai.com/apps-sdk/build/chatgpt-ui/`
@@ -36,7 +38,7 @@ Use focused searches before fetching:
 
 ### Archetype / Shape
 
-- Classify the request into one primary app archetype before choosing examples or scaffolds
+- Classify a new scaffold or material architecture change before choosing examples; preserve the existing architecture for narrow fixes
 - Keep the repo shape consistent with that archetype instead of inventing a new structure for each prompt
 
 ### Server
@@ -111,6 +113,8 @@ Use focused searches before fetching:
 - If auth is required, prepare review-safe demo credentials and validate them outside internal networks
 
 ## Generation Pattern
+
+For a new scaffold or material architecture change, adapt the following sequence to the requested scope. A narrow fix needs relevant docs, the targeted edit, and proportional verification.
 
 1. Classify the app archetype.
 2. Fetch docs with `$openai-docs`.

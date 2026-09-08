@@ -1,6 +1,6 @@
 ---
 name: hugging-face-jobs
-description: This skill should be used when users want to run any workload on Hugging Face Jobs infrastructure. Covers UV scripts, Docker-based jobs, hardware selection, cost estimation, authentication with tokens, secrets management, timeout configuration, and result persistence. Designed for general-purpose compute workloads including data processing, inference, experiments, batch jobs, and any Python-based tasks. Should be invoked for tasks involving cloud compute, GPU workloads, or when users mention running jobs on Hugging Face infrastructure without local setup.
+description: Use when the user explicitly wants to submit or manage a workload on Hugging Face Jobs infrastructure. Do not invoke for local, SSH-server, or other cloud GPU work merely because it uses GPUs.
 license: Complete terms in LICENSE.txt
 ---
 
@@ -23,7 +23,7 @@ Run any workload on fully managed Hugging Face infrastructure. No local setup re
 
 ## When to Use This Skill
 
-Use this skill when users want to:
+Use these capabilities only for work assigned to Hugging Face Jobs. They do not redirect local, SSH, or another provider's workloads to HF. Within that scope, users may want to:
 - Run Python workloads on cloud infrastructure
 - Execute jobs without local GPU/TPU setup
 - Process data at scale
@@ -36,9 +36,9 @@ Use this skill when users want to:
 
 When assisting with jobs:
 
-1. **ALWAYS use `hf_jobs()` MCP tool** - Submit jobs using `hf_jobs("uv", {...})` or `hf_jobs("run", {...})`. The `script` parameter accepts Python code directly. Do NOT save to local files unless the user explicitly requests it. Pass the script content as a string to `hf_jobs()`.
+1. **Submit an authorized workload** - Prefer the callable HF Jobs MCP tool for an authorized launch; use the existing HF CLI or SDK when MCP is unavailable or the established workflow requires it. MCP script input is inline code or a reachable URL; the CLI can upload a local script. Retain a local script when requested, needed for reproducibility, or required by the existing launch contract. Planning, examples, and cost-estimation requests do not authorize paid submission.
 
-2. **Always handle authentication** - Jobs that interact with the Hub require `HF_TOKEN` via secrets. See Token Usage section below.
+2. **Handle required authentication** - Public read-only requests and local artifact creation do not require an HF token. Use existing authentication when available; require suitable credentials only for private/gated access or authenticated mutations, with write permission only for writes. Never print token content. Pass job credentials through secrets.
 
 3. **Provide job details after submission** - After submitting, provide job ID, monitoring URL, estimated time, and note that the user can request status checks later.
 
@@ -51,7 +51,7 @@ Before starting any job, verify:
 ### ✅ **Account & Authentication**
 - Hugging Face Account with [Pro](https://hf.co/pro), [Team](https://hf.co/enterprise), or [Enterprise](https://hf.co/enterprise) plan (Jobs require paid plan)
 - Authenticated login: Check with `hf_whoami()`
-- **HF_TOKEN for Hub Access** ⚠️ CRITICAL - Required for any Hub operations (push models/datasets, download private repos, etc.)
+- **HF_TOKEN for authenticated Hub access** - Required for private/gated access and authenticated mutations; public reads do not require it.
 - Token must have appropriate permissions (read for downloads, write for uploads)
 
 ### ✅ **Token Usage** (See Token Usage section for details)
@@ -59,7 +59,7 @@ Before starting any job, verify:
 **When tokens are required:**
 - Pushing models/datasets to Hub
 - Accessing private repositories
-- Using Hub APIs in scripts
+- Using Hub APIs that require authentication
 - Any authenticated Hub operations
 
 **How to provide tokens:**
@@ -92,7 +92,7 @@ Before starting any job, verify:
 - Accessing private repositories
 - Creating new repositories
 - Modifying existing repositories
-- Using Hub APIs programmatically
+- Using Hub APIs that require authentication
 
 **Not Required:**
 - Downloading public models/datasets
@@ -181,7 +181,7 @@ api = HfApi()  # Automatically uses HF_TOKEN env var
 - Don't hardcode tokens in scripts
 - Use `os.environ.get("HF_TOKEN")` to access
 - Let `huggingface_hub` auto-detect when possible
-- Verify token exists before Hub operations
+- Verify credentials before operations requiring authentication
 
 ### Token Verification
 
@@ -196,7 +196,7 @@ user_info = whoami()  # Returns your username if authenticated
 import os
 assert "HF_TOKEN" in os.environ, "HF_TOKEN not found!"
 token = os.environ["HF_TOKEN"]
-print(f"Token starts with: {token[:7]}...")  # Should start with "hf_"
+print("HF_TOKEN is configured")
 ```
 
 ### Common Token Issues
@@ -492,9 +492,9 @@ hub_repo_details(["uv-scripts/classification"], repo_type="dataset", include_rea
 
 ## Critical: Saving Results
 
-**⚠️ EPHEMERAL ENVIRONMENT—MUST PERSIST RESULTS**
+**Ephemeral storage: retain required outputs.**
 
-The Jobs environment is temporary. All files are deleted when the job ends. If results aren't persisted, **ALL WORK IS LOST**.
+Before a job whose outputs must be retained, configure an authorized durable destination. Unsaved job files are lost when the job ends. For a disposable smoke check, retained platform logs may be sufficient if they satisfy the requested result.
 
 ### Persistence Options
 
@@ -685,7 +685,7 @@ hf jobs logs <job-id>         # View logs
 hf jobs cancel <job-id>       # Cancel job
 ```
 
-**Remember:** Wait for user to request status checks. Avoid polling repeatedly.
+**Monitoring:** Match the requested endpoint: for submission-only work, verify acceptance and return job details; for requested completion, monitoring, or artifacts, continue bounded checks or an available authorized monitoring mechanism. Avoid frequent unchanged polling.
 
 ### Job URLs
 
@@ -1011,14 +1011,14 @@ Add to PEP 723 header:
 
 ## Key Takeaways
 
-1. **Submit scripts inline** - The `script` parameter accepts Python code directly; no file saving required unless user requests
-2. **Jobs are asynchronous** - Don't wait/poll; let user check when ready
+1. **Submit through the appropriate interface** - Follow Key Directives for MCP/CLI selection and reproducible scripts.
+2. **Jobs are asynchronous** - Follow the requested endpoint and the monitoring guidance above.
 3. **Always set timeout** - Default 30 min may be insufficient; set appropriate timeout
-4. **Always persist results** - Environment is ephemeral; without persistence, all work is lost
-5. **Use tokens securely** - Always use `secrets={"HF_TOKEN": "$HF_TOKEN"}` for Hub operations
+4. **Persist required results** - Configure an authorized durable destination before an ephemeral job; retained logs may suffice for a disposable smoke check.
+5. **Use tokens securely** - Use `secrets={"HF_TOKEN": "$HF_TOKEN"}` when the job requires authenticated Hub access.
 6. **Choose appropriate hardware** - Start small, scale up based on needs (see hardware guide)
 7. **Use UV scripts** - Default to `hf_jobs("uv", {...})` with inline scripts for Python workloads
-8. **Handle authentication** - Verify tokens are available before Hub operations
+8. **Handle authentication** - Verify credentials only for operations requiring authentication.
 9. **Monitor jobs** - Provide job URLs and status check commands
 10. **Optimize costs** - Choose right hardware, set appropriate timeouts
 
@@ -1033,4 +1033,3 @@ Add to PEP 723 header:
 | Cancel job | `hf_jobs("cancel", {...})` | `hf jobs cancel <id>` | `cancel_job(job_id)` |
 | Schedule UV | `hf_jobs("scheduled uv", {...})` | - | `create_scheduled_uv_job()` |
 | Schedule Docker | `hf_jobs("scheduled run", {...})` | - | `create_scheduled_job()` |
-

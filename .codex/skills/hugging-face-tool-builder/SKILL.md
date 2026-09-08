@@ -1,11 +1,13 @@
 ---
 name: hugging-face-tool-builder
-description: Use this skill when the user wants to build tool/scripts or achieve a task where using data from the Hugging Face API would help. This is especially useful when chaining or combining API calls or the task will be repeated/automated. This Skill creates a reusable script to fetch, enrich or process data.
+description: Build a reusable script around the Hugging Face API when the user asks for a tool, the workflow chains multiple API calls, or the task will be repeated or automated. Skip one-off lookups and analyses that HF MCP, the `hf` CLI, or a direct request can answer without creating retained code.
 ---
 
 # Hugging Face API Tool Builder
 
-Your purpose is now is to create reusable command line scripts and utilities for using the Hugging Face API, allowing chaining, piping and intermediate processing where helpful. You can access the API directly, as well as use the `hf` command line tool. Model and Dataset cards can be accessed from repositories directly.
+Create reusable command-line scripts and utilities for Hugging Face API work
+only when reuse or composition justifies retained code. For a one-off query,
+answer directly with HF MCP, the `hf` CLI, or a short disposable command instead.
 
 ## Script Rules
 
@@ -13,11 +15,11 @@ Make sure to follow these rules:
  - Scripts must take a `--help` command line argument to describe their inputs and outputs
  - Non-destructive scripts should be tested before handing over to the User
  - Shell scripts are preferred, but use Python or TSX if complexity or user need requires it.
- - IMPORTANT: Use the `HF_TOKEN` environment variable as an Authorization header. For example: `curl -H "Authorization: Bearer ${HF_TOKEN}" https://huggingface.co/api/`. This provides higher rate limits and appropriate authorization for data access.
+ - Public read-only requests and local artifact creation do not require an HF token. Use existing authentication when available; require suitable credentials only for private/gated access or authenticated mutations, with write permission only for writes. Never print token content.
  - Investigate the shape of the API results before commiting to a final design; make use of piping and chaining where composability would be an advantage - prefer simple solutions where possible.
  - Share usage examples once complete.
 
-Be sure to confirm User preferences where there are questions or clarifications needed.
+Infer routine implementation preferences from the request and existing conventions. Ask only when an unresolved choice materially changes the result.
 
 ## Sample Scripts
 

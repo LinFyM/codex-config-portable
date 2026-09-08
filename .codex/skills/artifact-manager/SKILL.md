@@ -1,34 +1,30 @@
 ---
 name: artifact-manager
-description: Manage iterative artifacts by keeping a canonical "latest" file in the repo while archiving snapshots to WORKSPACE/.codex/tmp/artifacts/ARTIFACT_ID/history with a small manifest. Use when repeated revisions would otherwise create many versioned files (png/pdf/svg/yaml/logs/scripts) and you need clear latest vs history without clutter. Never delete without explicit user approval.
+description: Use when repeated revisions of a generated artifact need one canonical latest file plus temporary rollback history. Do not use for live source, tests, scripts, or documentation structure, and do not treat its workspace-temp history as durable evidence.
 ---
 
 # Artifact Manager
 
-## Quick start
-
-Replace/update a canonical latest file, archiving the previous version:
+## Quick Start
 
 ```bash
-python3 ~/.codex/skills/artifact-manager/scripts/revise.py \\
-  --latest docs/figures/foo.png \\
-  --new /tmp/foo.png \\
+python3 ~/.codex/skills/artifact-manager/scripts/revise.py \
+  --latest docs/figures/foo.png \
+  --new /tmp/foo.png \
   --note "Apply feedback: tighten spacing"
 ```
 
-List the history:
+List history with:
 
 ```bash
 python3 ~/.codex/skills/artifact-manager/scripts/list.py --latest docs/figures/foo.png
 ```
 
-## Core conventions
+## Rules
 
-- Keep only one canonical `latest` path in the repo for an iterated artifact.
-- Archive snapshots only when needed (milestones, reviews, user explicitly asks to keep versions).
-- Store history under `WORKSPACE/.codex/tmp/artifacts/` (workspace-scoped; do not write under `$HOME`).
-
-## Safety
-
-- Do not delete anything automatically. Only propose commands.
-- Prefer `copy` for new files by default; use `--move` only when safe.
+- Keep one canonical latest path for an iterated generated artifact.
+- The helper snapshots the previous latest file on each scripted revision for short-lived rollback.
+- Store rollback history under `WORKSPACE/.codex/tmp/artifacts/`, never under `$HOME`; keep durable milestones or evidence in an intentional project-owned location instead.
+- Scope includes generated figures, reports, exported tables, diagrams, rendered documents, and config snapshots.
+- Do not use this skill for source files, scripts, tests, training entrypoints, or documentation structure.
+- Never delete automatically. Prefer copy; use move only when ownership and rollback are clear.

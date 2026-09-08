@@ -88,7 +88,7 @@ trackio.init(
 )
 ```
 
-⚠️ **For remote training** (cloud GPUs, HF Jobs, etc.): Always use `space_id` since local storage is lost when the instance terminates.
+For ephemeral execution, persist required logs to an authorized durable destination. Use `space_id` only when HF Space syncing is requested or already authorized; remote execution alone does not require a Space or imply that local storage is ephemeral.
 
 ### Sync Local to Remote
 

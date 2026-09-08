@@ -1,6 +1,6 @@
 ---
 name: hugging-face-model-trainer
-description: This skill should be used when users want to train or fine-tune language models using TRL (Transformer Reinforcement Learning) on Hugging Face Jobs infrastructure. Covers SFT, DPO, GRPO and reward modeling training methods, plus GGUF conversion for local deployment. Includes guidance on the TRL Jobs package, UV scripts with PEP 723 format, dataset preparation and validation, hardware selection, cost estimation, Trackio monitoring, Hub authentication, and model persistence. Should be invoked for tasks involving cloud GPU training, GGUF conversion, or when users mention training on Hugging Face Jobs without local GPU setup.
+description: Use when the user explicitly wants TRL training, fine-tuning, or conversion on Hugging Face Jobs infrastructure. Submit a paid job only when the user asks to start or submit it; planning, cost estimation, examples, and code-only requests remain non-launching. Do not invoke for training on local machines, SSH servers, or unrelated cloud providers.
 license: Complete terms in LICENSE.txt
 ---
 
@@ -8,7 +8,7 @@ license: Complete terms in LICENSE.txt
 
 ## Overview
 
-Train language models using TRL (Transformer Reinforcement Learning) on fully managed Hugging Face infrastructure. No local GPU setup required—models train on cloud GPUs and results are automatically saved to the Hugging Face Hub.
+Train language models using TRL (Transformer Reinforcement Learning) on fully managed Hugging Face infrastructure. No local GPU setup is required. Configure the authorized durable output destination before launching; the included examples demonstrate Hub persistence.
 
 **TRL provides multiple training methods:**
 - **SFT** (Supervised Fine-Tuning) - Standard instruction tuning
@@ -28,7 +28,7 @@ hf_doc_fetch("https://huggingface.co/docs/trl/dpo_trainer")  # DPO
 
 ## When to Use This Skill
 
-Use this skill when users want to:
+Use these capabilities only for work assigned to Hugging Face Jobs. They do not redirect local, SSH, or another provider's workloads to HF. Within that scope, users may want to:
 - Fine-tune language models on cloud GPUs without local infrastructure
 - Train with TRL methods (SFT, DPO, GRPO, etc.)
 - Run training jobs on Hugging Face Jobs infrastructure
@@ -38,7 +38,7 @@ Use this skill when users want to:
 
 ### When to Use Unsloth
 
-Use **Unsloth** (`references/unsloth.md`) instead of standard TRL when:
+Consider **Unsloth** (`references/unsloth.md`) when current model support and measured memory or throughput benefit fit the requested run. Preserve the selected trainer and scientific contract unless changing them is within scope. Candidate benefits to verify include:
 - **Limited GPU memory** - Unsloth uses ~60% less VRAM
 - **Speed matters** - Unsloth is ~2x faster
 - Training **large models (>13B)** - memory efficiency is critical
@@ -50,9 +50,9 @@ See `references/unsloth.md` for complete Unsloth documentation and `scripts/unsl
 
 When assisting with training jobs:
 
-1. **ALWAYS use `hf_jobs()` MCP tool** - Submit jobs using `hf_jobs("uv", {...})`, NOT bash `trl-jobs` commands. The `script` parameter accepts Python code directly. Do NOT save to local files unless the user explicitly requests it. Pass the script content as a string to `hf_jobs()`. If user asks to "train a model", "fine-tune", or similar requests, you MUST create the training script AND submit the job immediately using `hf_jobs()`.
+1. **Use an appropriate interface for an authorized launch** - Prefer the callable HF Jobs MCP tool for an authorized launch; use the existing HF CLI or SDK when MCP is unavailable or the established workflow requires it. MCP script input is inline code or a reachable URL; the CLI can upload a local script. Retain a local script when requested, needed for reproducibility, or required by the existing launch contract. For planning, cost estimation, examples, or code-only requests, prepare the requested material without submitting a job.
 
-2. **Always include Trackio** - Every training script should include Trackio for real-time monitoring. Use example scripts in `scripts/` as templates.
+2. **Choose monitoring proportionally** - Include Trackio when the user wants a dashboard or the established workflow uses it. Platform logs are sufficient for a minimal smoke job when adding Trackio would be unnecessary overhead.
 
 3. **Provide job details after submission** - After submitting, provide job ID, monitoring URL, estimated time, and note that the user can request status checks later.
 
@@ -72,10 +72,7 @@ Before starting any training job, verify:
 ### ✅ **Account & Authentication**
 - Hugging Face Account with [Pro](https://hf.co/pro), [Team](https://hf.co/enterprise), or [Enterprise](https://hf.co/enterprise) plan (Jobs require paid plan)
 - Authenticated login: Check with `hf_whoami()`
-- **HF_TOKEN for Hub Push** ⚠️ CRITICAL - Training environment is ephemeral, must push to Hub or ALL training results are lost
-- Token must have write permissions  
-- **MUST pass `secrets={"HF_TOKEN": "$HF_TOKEN"}` in job config** to make token available (the `$HF_TOKEN` syntax
-  references your actual token value)
+- Configure an authorized durable destination for required training outputs before launch. If that destination is the Hub, require write access and pass `secrets={"HF_TOKEN": "$HF_TOKEN"}` in the job config. Public downloads do not require a token.
 
 ### ✅ **Dataset Requirements**
 - Dataset must exist on Hub or be loadable via `datasets.load_dataset()`
@@ -85,7 +82,7 @@ Before starting any training job, verify:
 
 ### ⚠️ **Critical Settings**
 - **Timeout must exceed expected training time** - Default 30min is TOO SHORT for most training. Minimum recommended: 1-2 hours. Job fails and loses all progress if timeout is exceeded.
-- **Hub push must be enabled** - Config: `push_to_hub=True`, `hub_model_id="username/model-name"`; Job: `secrets={"HF_TOKEN": "$HF_TOKEN"}`
+- **Required outputs must persist** - Use the established authorized destination. For Hub persistence, configure `push_to_hub=True`, `hub_model_id="username/model-name"`, and job secrets. Retained platform logs may suffice for a disposable smoke check.
 
 ## Asynchronous Job Guidelines
 
@@ -93,24 +90,23 @@ Before starting any training job, verify:
 
 ### Action Required
 
-**When user requests training:**
-1. **Create the training script** with Trackio included (use `scripts/train_sft_example.py` as template)
-2. **Submit immediately** using `hf_jobs()` MCP tool with script content inline - don't save to file unless user requests
+**When the user explicitly requests a launch:**
+1. **Create the training script**, adding Trackio when monitoring requirements justify it (use `scripts/train_sft_example.py` as a template when applicable)
+2. **Submit** with the available interface described above; retain the script when requested or required for reproducibility
 3. **Report submission** with job ID, monitoring URL, and estimated time
-4. **Wait for user** to request status checks - don't poll automatically
+4. **Follow the requested endpoint** - Use the monitoring guidance below for submission-only versus completion requests.
 
 ### Ground Rules
 - **Jobs run in background** - Submission returns immediately; training continues independently
 - **Initial logs delayed** - Can take 30-60 seconds for logs to appear
-- **User checks status** - Wait for user to request status updates
-- **Avoid polling** - Check logs only on user request; provide monitoring links instead
+- **Monitor within scope** - Match the requested endpoint: for submission-only work, verify acceptance and return job details; for requested completion, monitoring, or artifacts, continue bounded checks or an available authorized monitoring mechanism. Avoid frequent unchanged polling.
 
 ### After Submission
 
 **Provide to user:**
 - ✅ Job ID and monitoring URL
 - ✅ Expected completion time
-- ✅ Trackio dashboard URL
+- ✅ Trackio dashboard URL when configured
 - ✅ Note that user can request status checks later
 
 **Example Response:**
@@ -154,7 +150,7 @@ SFTConfig(max_seq_length=512)  # TypeError!
 
 ### Approach 1: UV Scripts (Recommended—Default Choice)
 
-UV scripts use PEP 723 inline dependencies for clean, self-contained training. **This is the primary approach for Claude Code.**
+UV scripts use PEP 723 inline dependencies for clean, self-contained training. **This is the primary approach in Codex when Hugging Face Jobs tools are available.**
 
 ```python
 hf_jobs("uv", {
@@ -201,11 +197,11 @@ trainer.push_to_hub()
 ```
 
 **Benefits:** Direct MCP tool usage, clean code, dependencies declared inline (PEP 723), no file saving required, full control
-**When to use:** Default choice for all training tasks in Claude Code, custom training logic, any scenario requiring `hf_jobs()`
+**When to use:** Default choice for an explicit Hugging Face Jobs training request that needs custom logic or `hf_jobs()`
 
 #### Working with Scripts
 
-⚠️ **Important:** The `script` parameter accepts either inline code (as shown above) OR a URL. **Local file paths do NOT work.**
+⚠️ **Important:** The MCP `script` parameter accepts inline code or a reachable URL; local file paths are not valid MCP input. The HF CLI can upload local scripts.
 
 **Why local paths don't work:**
 Jobs run in isolated Docker containers without access to your local filesystem. Scripts must be:
@@ -236,12 +232,7 @@ hf_jobs("uv", {"script": "https://raw.githubusercontent.com/user/repo/main/train
 hf_jobs("uv", {"script": "https://gist.githubusercontent.com/user/id/raw/train.py"})
 ```
 
-**To use local scripts:** Upload to HF Hub first:
-```bash
-huggingface-cli repo create my-training-scripts --type model
-huggingface-cli upload my-training-scripts ./train.py train.py
-# Use: https://huggingface.co/USERNAME/my-training-scripts/resolve/main/train.py
-```
+**To use local scripts:** Read the file and pass its contents to MCP, or use the HF CLI, which uploads a local script. A separate repository upload is optional and should occur only when publishing the script is in scope.
 
 ### Approach 2: TRL Maintained Scripts (Official Examples)
 
@@ -339,10 +330,10 @@ trl-jobs sft \
 ```
 
 **Benefits:** Pre-configured settings, automatic Trackio integration, automatic Hub push, one-line commands
-**When to use:** User working in terminal directly (not Claude Code context), quick local experimentation
+**When to use:** The user is working directly in a terminal without Codex-integrated Hugging Face Jobs tools, or needs quick local experimentation
 **Repository:** https://github.com/huggingface/trl-jobs
 
-⚠️ **In Claude Code context, prefer using `hf_jobs()` MCP tool (Approach 1) when available.**
+⚠️ **In Codex, prefer the `hf_jobs()` MCP tool (Approach 1) when it is available.**
 
 ## Hardware Selection
 
@@ -365,11 +356,11 @@ trl-jobs sft \
 
 ## Critical: Saving Results to Hub
 
-**⚠️ EPHEMERAL ENVIRONMENT—MUST PUSH TO HUB**
+**Ephemeral storage: persist required training outputs.**
 
-The Jobs environment is temporary. All files are deleted when the job ends. If the model isn't pushed to Hub, **ALL TRAINING IS LOST**.
+Use the established authorized durable destination. The Hub configuration below applies when Hub storage is selected; another authorized durable store is valid. Unsaved job files are lost when the job ends. Retained platform logs may suffice for a disposable smoke check.
 
-### Required Configuration
+### Configuration When Saving to Hub
 
 **In training script/config:**
 ```python
@@ -389,7 +380,7 @@ SFTConfig(
 
 ### Verification Checklist
 
-Before submitting:
+When Hub is the persistence destination, before submitting:
 - [ ] `push_to_hub=True` set in config
 - [ ] `hub_model_id` includes username/repo-name
 - [ ] `secrets` parameter includes HF_TOKEN
@@ -420,7 +411,7 @@ Before submitting:
 
 **Always add 20-30% buffer** for model/dataset loading, checkpoint saving, Hub push operations, and network delays.
 
-**On timeout:** Job killed immediately, all unsaved progress lost, must restart from beginning
+**On timeout:** The job stops and unsaved progress is lost. Resume from a compatible persisted checkpoint when available; otherwise restart within the authorized contract.
 
 ## Cost Estimation
 
@@ -443,7 +434,7 @@ Output includes estimated time, cost, recommended timeout (with buffer), and opt
 
 **Production-ready templates with all best practices:**
 
-Load these scripts for correctly:
+Load only the template matching the requested training method:
 
 - **`scripts/train_sft_example.py`** - Complete SFT training with Trackio, LoRA, checkpoints
 - **`scripts/train_dpo_example.py`** - DPO training for preference learning
@@ -489,7 +480,7 @@ hf_jobs("inspect", {"job_id": "your-job-id"})
 hf_jobs("logs", {"job_id": "your-job-id"})
 ```
 
-**Remember:** Wait for user to request status checks. Avoid polling repeatedly.
+**Monitoring:** Match the requested endpoint: for submission-only work, verify acceptance and return job details; for requested completion, monitoring, or artifacts, continue bounded checks or an available authorized monitoring mechanism. Avoid frequent unchanged polling.
 
 ## Dataset Validation
 
@@ -706,13 +697,13 @@ Add to PEP 723 header:
 
 ## Key Takeaways
 
-1. **Submit scripts inline** - The `script` parameter accepts Python code directly; no file saving required unless user requests
-2. **Jobs are asynchronous** - Don't wait/poll; let user check when ready
+1. **Submit through the appropriate interface** - Follow Key Directives for MCP/CLI selection and reproducible scripts.
+2. **Jobs are asynchronous** - Follow the requested endpoint and the monitoring guidance above.
 3. **Always set timeout** - Default 30 min is insufficient; minimum 1-2 hours recommended
-4. **Always enable Hub push** - Environment is ephemeral; without push, all results lost
-5. **Include Trackio** - Use example scripts as templates for real-time monitoring
+4. **Persist required outputs** - Use an authorized durable destination; enable Hub push when Hub storage is selected.
+5. **Use proportional monitoring** - Include Trackio when a dashboard or the existing workflow calls for it; otherwise rely on job logs
 6. **Offer cost estimation** - When parameters are known, use `scripts/estimate_cost.py`
-7. **Use UV scripts (Approach 1)** - Default to `hf_jobs("uv", {...})` with inline scripts; TRL maintained scripts for standard training; avoid bash `trl-jobs` commands in Claude Code
+7. **Use UV scripts (Approach 1)** - Default to `hf_jobs("uv", {...})` with inline scripts; use TRL-maintained scripts for standard training; avoid bash `trl-jobs` commands when Codex can call `hf_jobs()` directly
 8. **Use hf_doc_fetch/hf_doc_search** for latest TRL documentation
 9. **Validate dataset format** before training with dataset inspector (see Dataset Validation section)
 10. **Choose appropriate hardware** for model size; use LoRA for models >7B

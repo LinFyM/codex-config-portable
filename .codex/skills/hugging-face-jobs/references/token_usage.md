@@ -1,6 +1,6 @@
 # Token Usage Guide for Hugging Face Jobs
 
-**⚠️ CRITICAL:** Proper token usage is essential for any job that interacts with the Hugging Face Hub.
+Use credentials for authenticated Hub operations. Public read-only access does not require a token; write permission is needed only for writes.
 
 ## Overview
 
@@ -8,7 +8,7 @@ Hugging Face tokens are authentication credentials that allow your jobs to inter
 - Pushing models/datasets to Hub
 - Accessing private repositories
 - Creating new repositories
-- Using Hub APIs programmatically
+- Using Hub APIs that require authentication
 - Any authenticated Hub operations
 
 ## Token Types
@@ -188,6 +188,8 @@ except Exception as e:
 
 ### Verify Token in Job
 
+Use this check only when the job needs authenticated Hub operations.
+
 ```python
 import os
 
@@ -199,7 +201,7 @@ token = os.environ["HF_TOKEN"]
 
 # Verify token format (should start with "hf_")
 if not token.startswith("hf_"):
-    raise ValueError(f"Invalid token format: {token[:10]}...")
+    raise ValueError("Invalid token format")
 
 # Test token works
 from huggingface_hub import whoami
@@ -536,9 +538,9 @@ assert "HF_TOKEN" in os.environ, "HF_TOKEN required!"
 
 ## Key Takeaways
 
-1. **Always use `secrets={"HF_TOKEN": "$HF_TOKEN"}`** for Hub operations
+1. **Use `secrets={"HF_TOKEN": "$HF_TOKEN"}`** when the job requires authenticated Hub operations
 2. **Never hardcode tokens** in scripts or job configs
-3. **Verify token exists** in script before Hub operations
+3. **Verify credentials** before operations requiring authentication
 4. **Use auto-detection** when possible (`HfApi()` without token parameter)
 5. **Check permissions** - ensure token has required access
 6. **Monitor token usage** - review activity regularly

@@ -2,7 +2,7 @@
 
 Before delivering a notebook:
 
-- Run it top-to-bottom at least once (or as much as the environment allows).
+- Validate edited cells and their dependencies. Run top-to-bottom for a new notebook or execution-state changes within the authorized resource budget; prose/formatting edits do not justify expensive training, paid calls, or external writes.
 - Ensure early cells set all required state; avoid hidden state from prior runs.
 - Keep outputs tidy. Avoid giant outputs when a short summary works.
 - Prefer small tables, key metrics, or short printouts.

@@ -15,11 +15,11 @@ description: "Use when the task involves reading, creating, or editing `.docx` d
 1. Prefer visual review (layout, tables, diagrams).
    - If `soffice` and `pdftoppm` are available, convert DOCX -> PDF -> PNGs.
    - Or use `scripts/render_docx.py` (requires `pdf2image` and Poppler).
-   - If these tools are missing, install them or ask the user to review rendered pages locally.
+   - Use an available renderer or an appropriate authorized local installation. If rendering remains unavailable, complete structural/content checks and report the specific unverified layout scope.
 2. Use `python-docx` for edits and structured creation (headings, styles, tables, lists).
-3. After each meaningful change, re-render and inspect the pages.
+3. After layout changes, render and inspect affected pages. Inspect the full final render for a new document or global style/pagination changes.
 4. If visual review is not possible, extract text with `python-docx` as a fallback and call out layout risk.
-5. Keep intermediate outputs organized and clean up after final approval.
+5. Remove task-owned intermediate files after verification and delivery unless needed for a requested revision or the user asked to retain them.
 
 ## Temp and output conventions
 - Use `tmp/docs/` for intermediate files; delete when done.
@@ -71,10 +71,10 @@ python3 scripts/render_docx.py /path/to/file.docx --output_dir /tmp/docx_pages
 - Deliver a client-ready document: consistent typography, spacing, margins, and clear hierarchy.
 - Avoid formatting defects: clipped/overlapping text, broken tables, unreadable characters, or default-template styling.
 - Charts, tables, and visuals must be legible in rendered pages with correct alignment.
-- Use ASCII hyphens only. Avoid U+2011 (non-breaking hyphen) and other Unicode dashes.
+- Use fonts that render the requested language and punctuation correctly; replace unsupported glyphs only when observed.
 - Citations and references must be human-readable; never leave tool tokens or placeholder strings.
 
 ## Final checks
-- Re-render and inspect every page at 100% zoom before final delivery.
-- Fix any spacing, alignment, or pagination issues and repeat the render loop.
+- Inspect affected pages in the final render; inspect every page for a new document or global style/pagination changes. If rendering is unavailable, report the unverified scope.
+- Fix observed spacing, alignment, or pagination issues and recheck affected pages. Stop repeating checks once the relevant checks pass.
 - Confirm there are no leftovers (temp files, duplicate renders) unless the user asks to keep them.

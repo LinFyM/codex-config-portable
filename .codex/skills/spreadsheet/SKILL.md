@@ -35,7 +35,7 @@ IMPORTANT: System and user instructions always take precedence.
 - If LibreOffice (`soffice`) and Poppler (`pdftoppm`) are available, render sheets for visual review:
   - `soffice --headless --convert-to pdf --outdir $OUTDIR $INPUT_XLSX`
   - `pdftoppm -png $OUTDIR/$BASENAME.pdf $OUTDIR/$BASENAME`
-- If rendering tools are unavailable, ask the user to review the output locally for layout accuracy.
+- Use an available renderer or an appropriate authorized local installation. If rendering remains unavailable, complete structural/content checks and report the specific unverified layout scope.
 
 ## Dependencies (install if missing)
 Prefer `uv` for dependency management.

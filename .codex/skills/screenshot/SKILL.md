@@ -138,7 +138,7 @@ The helper automatically selects the first available tool:
 2) `gnome-screenshot`
 3) ImageMagick `import`
 
-If none are available, ask the user to install one of them and retry.
+If none are available, use another suitable installed capture capability or install a local dependency when authorized and appropriate. Ask for user action only for a remaining dependency, display, or privilege blocker.
 
 Coordinate regions require `scrot` or ImageMagick `import`.
 

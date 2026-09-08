@@ -1,4 +1,7 @@
 interface:
   display_name: "GPU Preflight"
-  short_description: "Check gpu01/gpu02 GPUs and recommend idle devices."
-  default_prompt: "Check both gpu01 and gpu02 GPU utilization/memory and recommend the best GPUs to run a new job. Include a concise per-node summary and a recommendation."
+  short_description: "Verify live GPU identity, load, and ownership"
+  default_prompt: "Use $gpu-preflight as one focused live scheduling snapshot; report device identity or blockers without creating a second workflow or historical health claim."
+
+policy:
+  allow_implicit_invocation: true

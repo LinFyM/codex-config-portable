@@ -1,0 +1,7 @@
+interface:
+  display_name: "Dispatch Parallel Agents"
+  short_description: "Delegate bounded work across task phases"
+  default_prompt: "Use $dispatching-parallel-agents to delegate independent bounded work in one or more waves and integrate the results."
+
+policy:
+  allow_implicit_invocation: true

@@ -1,0 +1,7 @@
+interface:
+  display_name: "Autonomous Git Worktrees"
+  short_description: "Isolate parallel or risky Git work autonomously"
+  default_prompt: "Use $using-git-worktrees to isolate independent Git work and integrate it safely."
+
+policy:
+  allow_implicit_invocation: true

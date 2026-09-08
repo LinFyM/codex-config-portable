@@ -1,0 +1,4 @@
+interface:
+  display_name: "Code Architecture Gate"
+  short_description: "Control active-code size, growth, ownership, and retirement."
+  default_prompt: "Use $code-architecture-gate proportionally to measure material structural growth, reuse canonical paths, retire superseded implementations, and resolve or justify real escalation signals without adding a human approval gate."

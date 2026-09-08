@@ -1,0 +1,4 @@
+interface:
+  display_name: "GPU Session"
+  short_description: "Maintain an explicitly authorized GPU footprint with tmux."
+  default_prompt: "Use $gpu-session only after fresh GPU preflight and explicit device selection. Refuse prohibited or other-user devices, avoid replacing unrelated tmux sessions, verify occupancy, and record the owner, release condition, and exact stop command."

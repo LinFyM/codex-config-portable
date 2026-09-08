@@ -1,11 +1,15 @@
 ---
 name: hf-mcp
-description: Use Hugging Face Hub via MCP server tools. Search models, datasets, Spaces, papers. Get repo details, fetch documentation, run compute jobs, and use Gradio Spaces as AI tools. Available when connected to the HF MCP server.
+description: Use Hugging Face Hub via MCP tools when the task explicitly concerns Hugging Face resources or the user chooses Hugging Face Spaces or Jobs. Search models, datasets, Spaces, and papers; fetch repository details and documentation; or invoke HF-hosted tools and compute. Do not route generic image generation or generic GPU work to Hugging Face when a local, system, or user-selected provider already owns the task.
 ---
 
 # Hugging Face MCP Server
 
 Connect AI assistants to the Hugging Face Hub. Setup: https://huggingface.co/settings/mcp
+
+The examples below demonstrate HF capabilities after this skill has been
+selected. They are not generic routing rules: use image generation or HF Jobs
+only when the user chose Hugging Face or the task is already HF-specific.
 
 ## Use Cases & Examples
 

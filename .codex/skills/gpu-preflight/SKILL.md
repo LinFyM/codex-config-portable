@@ -1,42 +1,68 @@
 ---
 name: gpu-preflight
-description: Check idle GPU availability across both nodes (gpu01 and gpu02) and recommend candidate devices before launching jobs. Use when you need to choose a node/GPU for training or inference, or to report GPU availability with a concrete recommendation.
+description: "Use when the user asks for current NVIDIA GPU state, when selecting a shared device, or immediately before a GPU launch whose device eligibility may have changed. Produce a live scheduling snapshot only. Do not invoke as general ML-process paperwork, repeatedly reload it within one launch, use it as historical health evidence, or assume fixed GPU identities or availability."
 ---
 
 # GPU Preflight
 
-## Quick start
+This is a focused live probe, not a planning, training, debugging, or monitoring
+workflow. When another launch record already exists, run the helper directly and
+attach only the selected device identity or blocker; do not create a second
+preflight document or replay this skill for each status poll.
+
+## Quick Start
 
 ```bash
 python3 ~/.codex/skills/gpu-preflight/scripts/gpu_preflight.py
 ```
 
-## What this skill does
-
-- Queries GPU status on `gpu01` and `gpu02` (8 GPUs each).
-- Summarizes per-GPU utilization and memory usage.
-- Produces a short list of candidate GPUs and a single recommended `node:gpu_index`.
-
-## Rules
-
-- Always check both nodes (`gpu01`, `gpu02`) before making any GPU scheduling recommendation.
-- Prefer `ssh` in batch mode and fail fast if a node is unreachable (do not hang waiting for a password prompt).
-
-## CLI usage
+Use JSON when another tool will consume the result:
 
 ```bash
-python3 ~/.codex/skills/gpu-preflight/scripts/gpu_preflight.py --help
+python3 ~/.codex/skills/gpu-preflight/scripts/gpu_preflight.py --json
 ```
 
-Common options:
+Query explicit SSH hosts from a login or peer node:
 
-- `--nodes gpu01,gpu02` (override node list)
-- `--max-util 5` (candidate threshold, percent)
-- `--max-mem-used-mib 1000` (candidate threshold)
-- `--top-k 5` (how many candidates to print)
-- `--json` (machine-readable output)
+```bash
+python3 ~/.codex/skills/gpu-preflight/scripts/gpu_preflight.py --nodes <host-a>,<host-b>
+```
 
-## Output contract (for agent reporting)
+## Evidence
 
-- When reporting availability, include both nodes and the recommended GPU candidates.
-- If any node cannot be queried, state that explicitly and do not assume it is idle.
+- Node and live GPU index.
+- Stable UUID and serial, model, driver, and compute mode.
+- Total/used/free memory and utilization.
+- Active compute PID, process name, memory, and OS owner when still visible.
+- Candidate, busy, and prohibited device states, plus node-level unreachable or process-check failure evidence when applicable.
+
+## Scheduling Rules
+
+- Treat every result as a snapshot, not a reservation.
+- Identify a device with node + index + UUID or serial. An old index alone is
+  not durable evidence.
+- A GPU in `Prohibited` compute mode is unavailable even when idle.
+- Automatic candidates are conservative: devices with active compute processes
+  are not recommended automatically. A process-bearing device may still be eligible
+  under the project's co-residency contract after live ownership, peak-memory
+  headroom, utilization, and interference assessment.
+- If process ownership cannot be checked, return no recommendation for that
+  node rather than assuming it is free.
+- Recheck immediately before launch and set the selected devices explicitly.
+- Distinguish busy, unavailable, and faulty. Do not kill jobs, reset GPUs,
+  change compute mode, reload drivers, or reboot without explicit authority.
+- For incident or health conclusions, add the relevant kernel/Xid logs, service
+  history, and historical evidence; this scheduling snapshot alone is not enough.
+
+## Options
+
+- `--max-util <percent>`: candidate utilization threshold.
+- `--max-mem-used-mib <MiB>`: candidate memory threshold.
+- `--top-k <N>`: number of candidates shown.
+- `--nodes <host,...>`: optional nodes; defaults to the current host.
+- `--timeout-s <seconds>`: per-command timeout.
+
+An empty automatic candidate list does not itself prohibit a launch. Assess any project-authorized
+co-residency using the live evidence; unknown ownership remains unresolved evidence.
+If no device is eligible, report the actual blocker instead of guessing or relying
+on a historical card count.

@@ -1,139 +1,40 @@
 ---
 name: verification-before-completion
-description: Use when about to claim work is complete, fixed, or passing, before committing or creating PRs - requires running verification commands and confirming output before making any success claims; evidence before assertions always
+description: Use before claiming work is complete, fixed, passing, or ready. Run fresh checks proportional to the claim and report any unverified scope.
 ---
 
 # Verification Before Completion
 
-## Overview
+Match evidence to the claim instead of applying one universal test ritual.
 
-Claiming work is complete without verification is dishonesty, not efficiency.
+Fresh evidence does not imply a new automated test. For research, data,
+operations, and infrastructure work, the faithful check may be a direct
+experiment, contract check, parsed configuration, live probe, counts,
+or output inspection. Use checksums only when an actual integrity or provenance
+contract requires them. Do not build test infrastructure solely to satisfy this
+skill.
 
-**Core principle:** Evidence before claims, always.
+For prose-only documentation or skill changes, inspecting the scoped diff is
+sufficient. Parse config or metadata only when their syntax or semantics changed;
+inspect links or rendering only when affected. Do not add hashes, integrity
+manifests, full-tree scans, or runtime tests for a text edit.
 
-**Violating the letter of this rule is violating the spirit of this rule.**
+## Check
 
-## The Iron Law
+1. Identify the observable result that would support the claim.
+2. Run the smallest faithful fresh check and inspect its exit status and relevant output.
+3. Reproduce the original symptom for bug fixes when practical.
+4. Add broader tests only when shared behavior or blast radius warrants them.
+5. State checks that could not run, partial coverage, and remaining risk.
 
-```
-NO COMPLETION CLAIMS WITHOUT FRESH VERIFICATION EVIDENCE
-```
+Once the relevant checks pass, deliver the result. Repeat or broaden them only
+for new changes, failures, unresolved concerns, or required repository gates.
 
-If you haven't run the verification command in this message, you cannot claim it passes.
+## Examples
 
-## The Gate Function
+- Config or environment repair: parse or load the config, then exercise the affected path.
+- Narrow code change: targeted test plus relevant lint or type check when available.
+- Shared behavior: focused regression test followed by the repository's broader gate.
+- Long-running work: verify durable process state, logs, outputs, and completion status rather than process existence alone.
 
-```
-BEFORE claiming any status or expressing satisfaction:
-
-1. IDENTIFY: What command proves this claim?
-2. RUN: Execute the FULL command (fresh, complete)
-3. READ: Full output, check exit code, count failures
-4. VERIFY: Does output confirm the claim?
-   - If NO: State actual status with evidence
-   - If YES: State claim WITH evidence
-5. ONLY THEN: Make the claim
-
-Skip any step = lying, not verifying
-```
-
-## Common Failures
-
-| Claim | Requires | Not Sufficient |
-|-------|----------|----------------|
-| Tests pass | Test command output: 0 failures | Previous run, "should pass" |
-| Linter clean | Linter output: 0 errors | Partial check, extrapolation |
-| Build succeeds | Build command: exit 0 | Linter passing, logs look good |
-| Bug fixed | Test original symptom: passes | Code changed, assumed fixed |
-| Regression test works | Red-green cycle verified | Test passes once |
-| Agent completed | VCS diff shows changes | Agent reports "success" |
-| Requirements met | Line-by-line checklist | Tests passing |
-
-## Red Flags - STOP
-
-- Using "should", "probably", "seems to"
-- Expressing satisfaction before verification ("Great!", "Perfect!", "Done!", etc.)
-- About to commit/push/PR without verification
-- Trusting agent success reports
-- Relying on partial verification
-- Thinking "just this once"
-- Tired and wanting work over
-- **ANY wording implying success without having run verification**
-
-## Rationalization Prevention
-
-| Excuse | Reality |
-|--------|---------|
-| "Should work now" | RUN the verification |
-| "I'm confident" | Confidence ≠ evidence |
-| "Just this once" | No exceptions |
-| "Linter passed" | Linter ≠ compiler |
-| "Agent said success" | Verify independently |
-| "I'm tired" | Exhaustion ≠ excuse |
-| "Partial check is enough" | Partial proves nothing |
-| "Different words so rule doesn't apply" | Spirit over letter |
-
-## Key Patterns
-
-**Tests:**
-```
-✅ [Run test command] [See: 34/34 pass] "All tests pass"
-❌ "Should pass now" / "Looks correct"
-```
-
-**Regression tests (TDD Red-Green):**
-```
-✅ Write → Run (pass) → Revert fix → Run (MUST FAIL) → Restore → Run (pass)
-❌ "I've written a regression test" (without red-green verification)
-```
-
-**Build:**
-```
-✅ [Run build] [See: exit 0] "Build passes"
-❌ "Linter passed" (linter doesn't check compilation)
-```
-
-**Requirements:**
-```
-✅ Re-read plan → Create checklist → Verify each → Report gaps or completion
-❌ "Tests pass, phase complete"
-```
-
-**Agent delegation:**
-```
-✅ Agent reports success → Check VCS diff → Verify changes → Report actual state
-❌ Trust agent report
-```
-
-## Why This Matters
-
-From 24 failure memories:
-- your human partner said "I don't believe you" - trust broken
-- Undefined functions shipped - would crash
-- Missing requirements shipped - incomplete features
-- Time wasted on false completion → redirect → rework
-- Violates: "Honesty is a core value. If you lie, you'll be replaced."
-
-## When To Apply
-
-**ALWAYS before:**
-- ANY variation of success/completion claims
-- ANY expression of satisfaction
-- ANY positive statement about work state
-- Committing, PR creation, task completion
-- Moving to next task
-- Delegating to agents
-
-**Rule applies to:**
-- Exact phrases
-- Paraphrases and synonyms
-- Implications of success
-- ANY communication suggesting completion/correctness
-
-## The Bottom Line
-
-**No shortcuts for verification.**
-
-Run the command. Read the output. THEN claim the result.
-
-This is non-negotiable.
+Do not infer success from a code diff, an agent report, an old test run, or confidence. Scope the final statement to the evidence actually observed.

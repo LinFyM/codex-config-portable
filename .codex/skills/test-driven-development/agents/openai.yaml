@@ -1,0 +1,7 @@
+interface:
+  display_name: "Test-Driven Development"
+  short_description: "TDD only when explicitly requested in natural language"
+  default_prompt: "Use $test-driven-development because the user explicitly requested TDD or test-first behavior; keep red-green-refactor faithful to stable production behavior and avoid expanding test infrastructure beyond the request."
+
+policy:
+  allow_implicit_invocation: true

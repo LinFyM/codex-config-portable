@@ -135,91 +135,117 @@ def choose_candidate(
 ) -> tuple[Candidate | None, str]:
     filtered = candidates
     reason = "latest_session"
-
     if workspace:
         filtered = [candidate for candidate in filtered if candidate.workspace == workspace]
         reason = "latest_workspace_session"
-
     if latest:
-        if not filtered:
-            return None, reason
-        filtered.sort(
-            key=lambda candidate: (
-                candidate.freshness,
-                candidate.history_count,
-                candidate.file_mtime,
-            ),
-            reverse=True,
-        )
-        return filtered[0], reason
-
+        return select_latest(filtered), reason
     if created_after is not None:
-        matches: list[tuple[float, Candidate]] = []
-        tolerance_before = 5.0
-        for candidate in filtered:
-            reference_ts = candidate.session_timestamp or candidate.file_mtime
-            delta = reference_ts - created_after
-            if delta < -tolerance_before:
-                continue
-            if delta > max_age_seconds:
-                continue
-            matches.append((delta, candidate))
-
-        if not matches:
-            unique_history: dict[str, float] = {}
-            for event in history_events:
-                delta = event.ts - created_after
-                if delta < -tolerance_before:
-                    continue
-                if delta > max_age_seconds:
-                    continue
-                unique_history[event.session_id] = max(event.ts, unique_history.get(event.session_id, 0.0))
-
-            if len(unique_history) == 1:
-                session_id, ts = next(iter(unique_history.items()))
-                stats = history_stats.get(session_id, {})
-                return (
-                    Candidate(
-                        session_id=session_id,
-                        workspace=workspace,
-                        session_file=str(Path.home() / ".codex/history.jsonl"),
-                        session_timestamp=ts,
-                        file_mtime=ts,
-                        history_count=int(stats.get("count", 0)),
-                        history_last_ts=parse_timestamp(stats.get("last_ts")),
-                    ),
-                    "unique_history_session_after_created_at",
-                )
-            return None, "no_session_after_created_at"
-
-        matches.sort(
-            key=lambda item: (
-                item[0],
-                -item[1].history_count,
-                -item[1].file_mtime,
-            )
+        return select_after(
+            filtered,
+            history_events,
+            history_stats,
+            workspace,
+            created_after,
+            max_age_seconds,
         )
-        return matches[0][1], "closest_rollout_after_created_at"
+    return select_latest(filtered), reason
 
-    if not filtered:
-        return None, reason
 
-    filtered.sort(
+def select_latest(candidates: list[Candidate]) -> Candidate | None:
+    if not candidates:
+        return None
+    return max(
+        candidates,
         key=lambda candidate: (
             candidate.freshness,
             candidate.history_count,
             candidate.file_mtime,
         ),
-        reverse=True,
     )
-    return filtered[0], reason
+
+
+def candidate_matches_time(
+    candidate: Candidate,
+    created_after: float,
+    max_age_seconds: float,
+) -> float | None:
+    reference_ts = candidate.session_timestamp or candidate.file_mtime
+    delta = reference_ts - created_after
+    if delta < -5.0 or delta > max_age_seconds:
+        return None
+    return delta
+
+
+def unique_history_candidate(
+    history_events: list[HistoryEvent],
+    history_stats: dict[str, dict[str, float | int]],
+    workspace: str | None,
+    created_after: float,
+    max_age_seconds: float,
+) -> Candidate | None:
+    matching: dict[str, float] = {}
+    for event in history_events:
+        delta = event.ts - created_after
+        if -5.0 <= delta <= max_age_seconds:
+            matching[event.session_id] = max(
+                event.ts, matching.get(event.session_id, 0.0)
+            )
+    if len(matching) != 1:
+        return None
+    session_id, timestamp = next(iter(matching.items()))
+    stats = history_stats.get(session_id, {})
+    return Candidate(
+        session_id=session_id,
+        workspace=workspace,
+        session_file=str(Path.home() / ".codex/history.jsonl"),
+        session_timestamp=timestamp,
+        file_mtime=timestamp,
+        history_count=int(stats.get("count", 0)),
+        history_last_ts=parse_timestamp(stats.get("last_ts")),
+    )
+
+
+def select_after(
+    candidates: list[Candidate],
+    history_events: list[HistoryEvent],
+    history_stats: dict[str, dict[str, float | int]],
+    workspace: str | None,
+    created_after: float,
+    max_age_seconds: float,
+) -> tuple[Candidate | None, str]:
+    matches = [
+        (delta, candidate)
+        for candidate in candidates
+        if (delta := candidate_matches_time(candidate, created_after, max_age_seconds))
+        is not None
+    ]
+    if matches:
+        selected = min(
+            matches,
+            key=lambda item: (item[0], -item[1].history_count, -item[1].file_mtime),
+        )[1]
+        return selected, "closest_rollout_after_created_at"
+    selected = unique_history_candidate(
+        history_events,
+        history_stats,
+        workspace,
+        created_after,
+        max_age_seconds,
+    )
+    reason = (
+        "unique_history_session_after_created_at"
+        if selected is not None
+        else "no_session_after_created_at"
+    )
+    return selected, reason
 
 
 def emit_json(payload: dict[str, object]) -> None:
     print(json.dumps(payload, indent=2, ensure_ascii=False))
 
 
-def main() -> int:
+def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Find a Codex SESSION_ID from ~/.codex history and rollout files.",
     )
@@ -245,31 +271,42 @@ def main() -> int:
         default="json",
         help="Output full JSON or only the resolved session id",
     )
-    args = parser.parse_args()
+    return parser.parse_args()
 
-    workspace = canonicalize_workspace(args.workspace)
-    created_after = parse_timestamp(args.created_after)
-    codex_home = Path(os.path.expanduser("~/.codex"))
-    history_stats, history_events = load_history(codex_home / "history.jsonl")
 
+def load_candidates(
+    codex_home: Path,
+    history_stats: dict[str, dict[str, float | int]],
+) -> list[Candidate]:
     candidates = []
     for path in iter_rollout_files(codex_home / "sessions"):
         candidate = read_candidate(path, history_stats)
         if candidate is not None:
             candidates.append(candidate)
+    return candidates
 
-    selected, reason = choose_candidate(
-        candidates=candidates,
-        history_events=history_events,
-        history_stats=history_stats,
-        workspace=workspace,
-        created_after=created_after,
-        max_age_seconds=args.max_age_seconds,
-        latest=args.latest,
+
+def session_timestamp(candidate: Candidate) -> str | None:
+    if candidate.session_timestamp is None:
+        return None
+    return (
+        datetime.fromtimestamp(candidate.session_timestamp, tz=timezone.utc)
+        .replace(microsecond=0)
+        .isoformat()
+        .replace("+00:00", "Z")
     )
 
+
+def emit_result(
+    selected: Candidate | None,
+    reason: str,
+    args: argparse.Namespace,
+    workspace: str | None,
+) -> int:
     if selected is None:
-        if args.format == "json":
+        if args.format == "id":
+            print("No matching session id found", file=sys.stderr)
+        else:
             emit_json(
                 {
                     "ok": False,
@@ -279,33 +316,44 @@ def main() -> int:
                     "created_after": args.created_after,
                 }
             )
-        else:
-            print("No matching session id found", file=sys.stderr)
         return 1
-
-    payload = {
-        "ok": True,
-        "session_id": selected.session_id,
-        "workspace": selected.workspace,
-        "reason": reason,
-        "session_file": selected.session_file,
-        "session_timestamp": (
-            datetime.fromtimestamp(selected.session_timestamp, tz=timezone.utc)
-            .replace(microsecond=0)
-            .isoformat()
-            .replace("+00:00", "Z")
-            if selected.session_timestamp is not None
-            else None
-        ),
-        "history_count": selected.history_count,
-        "history_last_ts": selected.history_last_ts,
-    }
-
     if args.format == "id":
         print(selected.session_id)
-    else:
-        emit_json(payload)
+        return 0
+    emit_json(
+        {
+            "ok": True,
+            "session_id": selected.session_id,
+            "workspace": selected.workspace,
+            "reason": reason,
+            "session_file": selected.session_file,
+            "session_timestamp": session_timestamp(selected),
+            "history_count": selected.history_count,
+            "history_last_ts": selected.history_last_ts,
+        }
+    )
     return 0
+
+
+def main() -> int:
+    args = parse_args()
+
+    workspace = canonicalize_workspace(args.workspace)
+    created_after = parse_timestamp(args.created_after)
+    codex_home = Path(os.path.expanduser("~/.codex"))
+    history_stats, history_events = load_history(codex_home / "history.jsonl")
+
+    candidates = load_candidates(codex_home, history_stats)
+    selected, reason = choose_candidate(
+        candidates=candidates,
+        history_events=history_events,
+        history_stats=history_stats,
+        workspace=workspace,
+        created_after=created_after,
+        max_age_seconds=args.max_age_seconds,
+        latest=args.latest,
+    )
+    return emit_result(selected, reason, args, workspace)
 
 
 if __name__ == "__main__":

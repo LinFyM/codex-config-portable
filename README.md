@@ -1,47 +1,50 @@
 # Codex Global Config (Portable)
 
-This repo stores reusable Codex global instructions and custom skills so they can be shared across machines (server and local laptop).
+Reusable global instructions, current skills, and a sanitized configuration template for moving Codex preferences between machines.
+
+Last synchronized: **2026-09-08**.
 
 ## Included
 
-- `.codex/AGENTS.md`
-- `.codex/config.template.toml` (sanitized template)
-- `.codex/skills/` skills bundle (includes `superpowers` + `planning-with-files` and supporting utilities).
-  - See `.codex/skills/` for the authoritative list (this README intentionally does not enumerate every skill).
+- `.codex/AGENTS.md`: current collaboration, execution, scientific-work, storage, and verification principles. Machine-specific hosts, proxy ports, account paths, and quota observations are generalized for this public copy.
+- `.codex/config.template.toml`: current model/reasoning, execution, UI, feature, memory, MCP, and plugin-enablement preferences. The snapshot uses `gpt-6-astra` with `high` reasoning and leaves context limits to Codex defaults.
+- `.codex/skills/`: the current local skill files, helper scripts, references, assets, and licenses. Skills removed from the local installation are removed from this snapshot too; earlier versions remain in Git history.
+- `.codex/skills/.system/`: snapshots of the installed system skills, including local adjustments. These are available for reference or deliberate restoration; normal setup below preserves the receiving installation's system skills.
 
-## Not Included (intentionally)
+The skills directory is the authoritative inventory. Plugin-managed skill packages are installed through Codex and are not duplicated into this bundle.
 
-- Auth/session/cache files, for example:
-  - `.codex/auth.json`
-  - `.codex/.credentials.json`
-  - `.codex/history.jsonl`
-  - `.codex/sessions/`
-  - `.codex/archived_sessions/`
-  - `.codex/models_cache.json`
+## Excluded
+
+Authentication and OAuth credentials, real API keys, live `config.toml`, project trust paths, proxy endpoints, local marketplace paths, command-approval rules, UI onboarding state, conversations, history, memory contents, databases, logs, caches, backups, and plugin runtime files are excluded. Project-specific instructions remain in their project repositories.
+
+Memory and plugin preferences in the template describe settings only. They do not transfer memory contents, plugin installations, or account connections.
 
 ## Local Setup
 
-1. Clone this repository on your local machine.
-2. Copy files to your local Codex home:
+Clone the repository and review the instructions and configuration before copying them. From the repository root:
 
 ```bash
-mkdir -p ~/.codex
-rsync -a .codex/ ~/.codex/
+# Set this to the Codex home used by the target installation.
+codex_target_dir="${CODEX_HOME:-$HOME/.codex}"
+mkdir -p "$codex_target_dir/skills"
+
+cp .codex/AGENTS.md "$codex_target_dir/AGENTS.md"
+cp .codex/config.template.toml "$codex_target_dir/config.template.toml"
+rsync -a --exclude='.system/' .codex/skills/ "$codex_target_dir/skills/"
 ```
 
-3. Use template config as a starting point:
+For a new installation, use the template as the starting configuration:
 
 ```bash
-cp ~/.codex/config.template.toml ~/.codex/config.toml
+cp "$codex_target_dir/config.template.toml" "$codex_target_dir/config.toml"
 ```
 
-4. Edit local-only fields in `~/.codex/config.toml`:
-   - model/review settings
-   - proxy settings (if needed)
-   - local project trust paths
-   - local MCP endpoints (if different)
+For an existing installation, merge the desired settings into its current `config.toml`. Keep machine-specific trust entries, proxies, marketplace paths, and authentication local. Model availability, experimental features, and plugin identifiers depend on the installed Codex version and account; install and connect the desired plugins separately.
 
-## Notes
+The template records full filesystem access and no interactive approvals as current preferences. Review those settings for the target environment before using the template.
 
-- `AGENTS.md` may contain server-specific policies (for example GPU node naming). Keep or override them based on your local environment.
-- Keep secrets out of git. Never commit tokens, credentials, or private keys.
+The skill copy does not delete destination-only skills. When updating an existing installation, review old skill folders separately so retired workflows do not remain active accidentally. Restore a system skill from `.system/` only when that version or local adjustment is intended; Codex updates can replace system-skill files.
+
+## Updating This Repository
+
+Refresh the instructions and skill snapshot from the active Codex home, remove snapshot entries for skills that are no longer installed, and update the sanitized template and synchronization date. Keep the public copy portable: generalize host-specific facts, retain explicit example credentials only, preserve licenses, and exclude runtime files. Review the scoped diff and parse the TOML template before committing.

@@ -55,9 +55,8 @@ This skill provides comprehensive tools for AI engineers and researchers to publ
 The skill includes Python scripts in `scripts/` for paper publishing operations.
 
 ### Prerequisites
-- Install dependencies: `uv add huggingface_hub pyyaml requests markdown python-dotenv`
-- Set `HF_TOKEN` environment variable with Write-access token
-- Activate virtual environment: `source .venv/bin/activate`
+- Prefer an existing suitable environment or `uv run` with the script's inline dependencies; install missing dependencies locally only when needed. Do not modify an unrelated project manifest.
+- Public read-only requests and local artifact creation do not require an HF token. Use existing authentication when available; require suitable credentials only for private/gated access or authenticated mutations, with write permission only for writes. Never print token content.
 
 > **All paths are relative to the directory containing this SKILL.md
 file.**

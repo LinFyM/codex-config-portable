@@ -1,6 +1,6 @@
 ---
 name: codex-persistent-terminal
-description: Run and recover long-lived Codex CLI conversations in Linux tmux sessions with workspace-scoped metadata and SESSION_ID tracking. Use when Codex needs to keep watching one interactive session, continue the same conversation after detach/reattach, recover after terminal loss with exact `SESSION_ID` resume, or monitor tmux-backed Codex output without relying on VS Code integrated terminals.
+description: "Manage a long-lived Codex CLI conversation in Linux tmux when the user explicitly asks to create, attach, recover, or inspect a persistent session. Inspection is one-time and read-only; continued polling belongs to a monitoring mechanism. Recovery prefers an exact SESSION_ID."
 ---
 
 # Codex Persistent Terminal
@@ -39,11 +39,18 @@ Or fall back to the most recent matching session:
 
 ## Workflow
 
-- Default to creating a new tmux session. Do not take over the user's current VS Code integrated terminal session unless they explicitly point to it.
+- Match the operation the user requested. Create a new tmux session only for an
+  explicit start request; do not turn monitoring, inspection, or attachment into
+  a new Codex process. Do not take over the user's current VS Code integrated
+  terminal unless they explicitly point to it.
 - Start new conversations with `start_session.sh`. It launches `codex` inside tmux with the old-tmux-safe form `tmux new-session -d -s "$NAME" 'cd "$WORKSPACE" && codex'`.
-- Monitor with `capture_session.sh` when you only need output or state. Prefer `capture-pane` for read-only monitoring.
+- Inspect with `capture_session.sh` when you only need current output or state. This is
+  read-only; if the named session is missing, report that state instead of
+  creating or resuming one implicitly.
 - Continue the conversation by attaching with `attach_session.sh`. This script exports `TERM=xterm-256color` before attaching.
-- Recover a lost terminal with `resume_session.sh`. Prefer exact `SESSION_ID`; use `--last` only when the exact id is unavailable.
+- Recover a lost terminal with `resume_session.sh`. Prefer exact `SESSION_ID`.
+  Use `--last` only after checking that the candidate workspace and conversation
+  are unambiguous; otherwise list candidates and stop.
 
 ## Rules
 
@@ -64,15 +71,12 @@ Or fall back to the most recent matching session:
 
 - If attach fails with `open terminal failed: terminal does not support clear`, set `TERM=xterm-256color` and retry. `attach_session.sh` already does this automatically.
 - If the tmux session is still alive, do not start a recovery tmux session. Attach to the existing one instead.
-- If tmux is gone but metadata still contains `current_session_id`, resume with that exact id.
-- If metadata is present but `SESSION_ID` is still missing, use `find_session_id.py` against `~/.codex/history.jsonl` and `~/.codex/sessions/...`.
-- When `capture_session.sh` reports `tmux_missing`, treat that as a recovery decision point:
-  - If `current_session_id` is known, use `resume_session.sh --session-id`.
-  - If only the most recent session is known, use `resume_session.sh --last`.
+- For an authorized recovery, if tmux is gone but metadata contains `current_session_id`, resume with that exact id.
+- For recovery, if metadata is present but `SESSION_ID` is missing, use `find_session_id.py` against `~/.codex/history.jsonl` and `~/.codex/sessions/...`.
+- When `capture_session.sh` reports `tmux_missing`, report that state for an inspection request. For an authorized recovery or continuation request, resume the known exact session ID; use `--last` only after establishing an unambiguous matching session.
 
 ## When To Use
 
-- The user asks to keep watching one Codex session for a long time.
 - The user asks to continue the same Codex conversation after detach or terminal close.
 - The user asks to recover the same conversation in a fresh terminal.
-- The user asks to monitor or inspect a Codex task that is running inside tmux.
+- The user asks to inspect a Codex task that is running inside tmux. Use a watchdog or automation for continued polling.

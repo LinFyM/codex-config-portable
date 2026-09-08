@@ -63,7 +63,10 @@ file.**
 
 ### Prerequisites
 - `uv` package manager installed
-- `HF_TOKEN` environment variable must be set with a Write-access token
+- Public read-only SQL queries do not require a token. Set `HF_TOKEN` only when
+  accessing private or gated data, creating repositories, pushing changes, or
+  performing another authenticated operation; write access is required only
+  for writes.
 
 ---
 
